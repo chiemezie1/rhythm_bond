@@ -6,7 +6,7 @@
 We believe music is a social magnet that builds empathy, trust, and a sense of belonging. RhythmBond aims to amplify that feeling by bringing people together around music and conversation, making every listener feel valued, curious, and connected.
 
 ### How (Principles)
-RhythmBond is a modern web-based music player that enhances the music listening experience through rich metadata, AI-powered recommendations, and social sharing features. Our mission is to transform passive music consumption into an active, enriched experience where discovery and sharing are seamlessly integrated.
+RhythmBond is a modern web-based music player that enhances the music listening experience through YouTube integration, AI-powered recommendations, and social sharing features. Our mission is to transform passive music consumption into an active, enriched experience where discovery and sharing are seamlessly integrated. RhythmBond leverages YouTube as the music source to provide a vast catalog of music content organized by genres.
 
 - **Intuitive Experience**: Creating a sleek, user-friendly music player interface
 - **Rich Metadata**: Enabling deep music exploration through comprehensive tagging
@@ -34,26 +34,43 @@ RhythmBond offers a range of features to enhance the music listening experience:
 ### Frontend
 - **Framework**: Next.js (React)
 - **Styling**: Tailwind CSS
-- **State Management**: React Context API / Redux
-- **Audio Player**: Howler.js or Wavesurfer.js
-- **Data Fetching**: SWR or React Query
+- **State Management**: React Context API
+- **Audio Player**: YouTube Embedded Player
+- **Data Fetching**: Fetch API
 
 ### Backend
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Real-time**: Socket.IO for social features and notifications
-- **API Integration**: Music streaming API (Spotify, Apple Music, etc.)
-- **AI**: TensorFlow.js for recommendation engine
+- **Runtime**: Next.js API Routes
+- **Framework**: Next.js
+- **API Integration**: YouTube for music content
+- **AI**: Future implementation for recommendation engine
 
 ### Database & Storage
 - **Database**: MySQL
 - **ORM**: Prisma
-- **Caching**: Redis (optional)
 
 ### Authentication
-- **User Auth**: JWT, OAuth 2.0 (Google, Facebook)
-- **Music Service Auth**: OAuth integration with chosen music API
+- **User Auth**: NextAuth.js, JWT
 - **Security**: Password hashing, role-based access control
+
+## 📂 Project Structure
+
+- `src/app`: Next.js app directory with pages and API routes
+- `src/components`: React components organized by functionality
+  - `common`: Common components used throughout the application
+  - `layout`: Layout components (header, footer, sidebar)
+  - `music`: Music-related components (tracks, playlists, etc.)
+  - `player`: Music player components
+  - `social`: Social features components
+  - `user`: User-related components (profile, settings, etc.)
+- `src/contexts`: React context providers
+- `src/hooks`: Custom React hooks
+- `src/lib`: Utility libraries
+- `src/providers`: Provider components
+- `src/services`: Service modules for data fetching and manipulation
+- `src/styles`: Global styles
+- `src/types`: TypeScript type definitions
+- `prisma`: Prisma ORM schema and migrations
+- `public`: Static assets
 
 ## 👥 User Roles
 
@@ -86,8 +103,7 @@ RhythmBond's brand is warm, creative, and modern with a friendly, supportive ton
 ### Prerequisites
 - Node.js (v18+ LTS)
 - MySQL Server
-- Music API credentials (Spotify, Apple Music, etc.)
-- Google OAuth credentials (optional)
+- Google OAuth credentials (for authentication)
 
 ### Installation
 
@@ -97,52 +113,29 @@ git clone https://github.com/yourusername/rhythmbond.git
 cd rhythmbond
 ```
 
-2. Install dependencies for both frontend and backend:
+2. Install dependencies:
 ```bash
-# Install backend dependencies
-cd backend
-npm install
-
-# Install frontend dependencies
-cd ../frontend
 npm install
 ```
 
 3. Set up environment variables:
-Create a `.env` file in the backend directory with the following:
+Create a `.env.local` file with the following:
 ```
-# Server Configuration
-PORT=3000
-NODE_ENV=development
+# NextAuth Configuration
+NEXTAUTH_SECRET=your-secret-key
+NEXTAUTH_URL=http://localhost:3000
 
 # Database
 DATABASE_URL=mysql://username:password@localhost:3306/rhythmbond
-
-# Authentication
-JWT_SECRET=your_jwt_secret
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-
-# Music API (example for Spotify)
-SPOTIFY_CLIENT_ID=your_spotify_client_id
-SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
-SPOTIFY_REDIRECT_URI=http://localhost:3000/api/auth/spotify/callback
 ```
 
 4. Set up the database:
 ```bash
-cd ../backend
-npx prisma migrate dev
+npx prisma db push
 ```
 
-5. Run the development servers:
+5. Run the development server:
 ```bash
-# Start the backend server
-cd backend
-npm run dev
-
-# In a new terminal, start the frontend
-cd frontend
 npm run dev
 ```
 
@@ -152,16 +145,12 @@ npm run dev
 
 The database includes tables for:
 - Users (with roles and preferences)
-- MusicServiceTokens (for API authentication)
-- ExternalTracks (cached data from music APIs)
-- UserTrackMetadata (user-specific track information)
-- Tags (organized by category)
-- TrackTags (connecting tracks to tags)
+- Tracks (YouTube tracks with metadata)
 - Playlists and PlaylistTracks
-- PlaylistCollaborators, Likes, and Comments
-- UserFollows (social connections)
-- ListeningHistory and UserStatistics
-- UserRecommendations (AI-generated suggestions)
+- Custom Tags and TrackTags
+- Social connections (follows, likes, comments)
+- Posts and shared content
+- User preferences and listening history
 
 ## 🧪 Testing
 
@@ -172,42 +161,36 @@ For testing the application:
 - E2E testing: Cypress for critical user flows
 - Multiple browser profiles: To test social features with different accounts
 
-## 🔌 Music API Integration
+## 🔌 Music Integration
 
-RhythmBond can integrate with various music streaming APIs:
+RhythmBond uses YouTube as its exclusive music source:
 
-### Spotify Web API
-- Comprehensive documentation: [Spotify Web API](https://developer.spotify.com/documentation/web-api/)
-- Rich metadata and recommendation features
-- OAuth 2.0 authentication flow
-- Playback through Spotify Web Playback SDK
-
-### Apple Music API
-- Documentation: [Apple Music API](https://developer.apple.com/documentation/applemusicapi/)
-- High-quality audio streams
-- MusicKit JS for web integration
-- Requires Apple Developer account
-
-### Deezer API
-- Documentation: [Deezer API](https://developers.deezer.com/api)
-- Simple REST API structure
-- Good catalog coverage in certain regions
-- JavaScript SDK available
-
-### Last.fm API
-- Documentation: [Last.fm API](https://www.last.fm/api)
-- Rich tagging and social features
-- Limited to metadata (no streaming)
-- Good for supplementing other APIs with social data
+### YouTube Integration
+- Documentation: [YouTube Embedded Player](https://developers.google.com/youtube/iframe_api_reference)
+- Vast catalog of music content
+- Embedded player for seamless integration
+- Organized by genres:
+  - Afrobeats & Global Pop
+  - Pop
+  - Hip-Hop & Trap
+  - R&B
+  - Blues
+- Custom metadata and tagging system
+- User-created playlists and favorites
+- Recently played tracking
+- No API key required for basic embedded playback
 
 ## 📚 Learn More
 
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
 - [Prisma Documentation](https://www.prisma.io/docs)
-- [Socket.IO Documentation](https://socket.io/docs)
-- [Howler.js Documentation](https://github.com/goldfire/howler.js#documentation)
-- [TensorFlow.js Documentation](https://www.tensorflow.org/js/guide)
+- [NextAuth.js Documentation](https://next-auth.js.org/getting-started/introduction)
+- [YouTube IFrame Player API](https://developers.google.com/youtube/iframe_api_reference)
+
+## 📁 API Documentation
+
+See the [API documentation](src/app/api/README.md) for details on available endpoints.
 
 ## 📄 License
 

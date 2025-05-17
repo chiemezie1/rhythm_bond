@@ -1,0 +1,252 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// User model
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  username      String?   @unique
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  coverImage    String?
+  bio           String?   @db.Text
+  isVerified    Boolean?  @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  playlists     Playlist[]
+  favorites     Favorite[]
+  recentlyPlayed RecentlyPlayed[]
+  playCount     PlayCount[]
+  tags          Tag[]
+  followers     Follow[]    @relation("following")
+  following     Follow[]    @relation("follower")
+  posts         Post[]
+  comments      Comment[]
+  likes         Like[]
+  commentLikes  CommentLike[]
+}
+
+// NextAuth.js models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Music-related models
+model Track {
+  id          String    @id @default(cuid())
+  title       String
+  artist      String
+  genre       String?
+  youtubeId   String    @unique
+  youtubeUrl  String
+  thumbnail   String
+  duration    String?
+  releaseYear Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  playlists   PlaylistTrack[]
+  favorites   Favorite[]
+  recentlyPlayed RecentlyPlayed[]
+  playCount   PlayCount[]
+  tags        TagTrack[]
+}
+
+model Playlist {
+  id          String    @id @default(cuid())
+  name        String
+  description String?   @db.Text
+  coverImage  String?
+  isPublic    Boolean   @default(true)
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tracks      PlaylistTrack[]
+}
+
+model PlaylistTrack {
+  id          String    @id @default(cuid())
+  playlistId  String
+  trackId     String
+  order       Int
+  addedAt     DateTime  @default(now())
+
+  playlist    Playlist  @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  track       Track     @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@unique([playlistId, trackId])
+}
+
+model Favorite {
+  id        String    @id @default(cuid())
+  userId    String
+  trackId   String
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  track     Track     @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, trackId])
+}
+
+model RecentlyPlayed {
+  id        String    @id @default(cuid())
+  userId    String
+  trackId   String
+  playedAt  DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  track     Track     @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@index([userId, playedAt(sort: Desc)])
+}
+
+model PlayCount {
+  id        String    @id @default(cuid())
+  userId    String
+  trackId   String
+  count     Int       @default(1)
+  updatedAt DateTime  @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  track     Track     @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, trackId])
+}
+
+model Tag {
+  id        String    @id @default(cuid())
+  name      String
+  color     String    @default("#3b82f6")
+  userId    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tracks    TagTrack[]
+
+  @@unique([userId, name])
+}
+
+model TagTrack {
+  id        String    @id @default(cuid())
+  tagId     String
+  trackId   String
+  createdAt DateTime  @default(now())
+
+  tag       Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  track     Track     @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@unique([tagId, trackId])
+}
+
+// Social features
+model Follow {
+  id          String    @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime  @default(now())
+
+  follower    User      @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User      @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+}
+
+model Post {
+  id          String    @id @default(cuid())
+  content     String    @db.Text
+  userId      String
+  trackId     String?
+  visibility  String    @default("public") // public, followers, private
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments    Comment[]
+  likes       Like[]
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  content   String    @db.Text
+  userId    String
+  postId    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  likes     CommentLike[]
+}
+
+model Like {
+  id        String    @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+}
+
+model CommentLike {
+  id        String    @id @default(cuid())
+  userId    String
+  commentId String
+  createdAt DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment   Comment   @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+}
