@@ -69,9 +69,10 @@ export async function POST(
       }
     } catch (dbError) {
       console.error('Error processing like in database:', dbError);
-      
-      // Return success response even if database fails
-      return NextResponse.json({ success: true });
+      return NextResponse.json(
+        { error: 'Failed to process like' },
+        { status: 500 }
+      );
     }
   } catch (error) {
     console.error('Error processing like request:', error);

@@ -13,12 +13,9 @@ This directory contains all the React components for the RhythmBond application,
 
 ## Common Components
 
-- `AdvancedSearch.tsx` - Advanced search component
 - `LoadingSpinner.tsx` - Loading spinner component
-- `MoodFilter.tsx` - Filter tracks by mood
 - `ProtectedRoute.tsx` - Route protection for authenticated users
 - `SearchBar.tsx` - Search bar component
-- `TrackMenu.tsx` - Track context menu
 
 ## Layout Components
 
@@ -29,18 +26,21 @@ This directory contains all the React components for the RhythmBond application,
 
 ## Music Components
 
-- `AlbumDetails.tsx` - Album details component
-- `ArtistDetails.tsx` - Artist details component
-- `CustomTags.tsx` - Custom tags management component
-- `FavoriteTracks.tsx` - Favorite tracks component
-- `MostPlayedTracks.tsx` - Most played tracks component
-- `MusicCategories.tsx` - Music categories component
-- `PlaylistEditor.tsx` - Playlist editor component
-- `RecentlyPlayed.tsx` - Recently played tracks component
-- `RecommendedSection.tsx` - Recommended tracks component
-- `TrackCard.tsx` - Track card component
-- `TrendingTracks.tsx` - Trending tracks component
-- `UserPlaylists.tsx` - User playlists component
+- `AdvancedSearch.tsx` - Advanced search component with filters
+- `CustomTags.tsx` - Custom tags for tracks
+- `FavoriteTracks.tsx` - User's favorite tracks
+- `GenreMenu.tsx` - Menu for genre options
+- `MostPlayedTracks.tsx` - User's most played tracks
+- `MusicCategories.tsx` - Music categories/genres display
+- `PlaylistEditor.tsx` - Playlist creation and editing
+- `PlaylistsSection.tsx` - Display user playlists
+- `RecentlyPlayed.tsx` - Recently played tracks
+- `RecommendedSection.tsx` - Recommended tracks
+- `TrackCard.tsx` - Card display for a track
+- `TrackCardWithMenu.tsx` - Track card with context menu
+- `TrackMenu.tsx` - Context menu for tracks
+- `TrendingTracks.tsx` - Trending tracks display
+- `UserPlaylists.tsx` - User's playlists
 
 ## Player Components
 

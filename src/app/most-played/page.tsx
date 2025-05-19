@@ -14,7 +14,7 @@ interface MostPlayedTrack extends Track {
 }
 
 export default function MostPlayedPage() {
-  const { getMostPlayed, playTrack } = useMusic();
+  const { getMostPlayedTracks, playTrack } = useMusic();
   const { isAuthenticated, user } = useAuth();
   const [tracks, setTracks] = useState<MostPlayedTrack[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,7 +32,7 @@ export default function MostPlayedPage() {
         setError(null);
 
         // Get most played tracks (we'll ignore the time range for now since it's not implemented in the backend)
-        const mostPlayed = getMostPlayed(20);
+        const mostPlayed = getMostPlayedTracks(20);
         setTracks(mostPlayed);
         setIsLoading(false);
       } catch (err) {
@@ -43,20 +43,20 @@ export default function MostPlayedPage() {
     };
 
     loadMostPlayed();
-  }, [getMostPlayed, timeRange]);
+  }, [getMostPlayedTracks, timeRange]);
 
   // Handle showing the track menu
   const handleShowTrackMenu = (e: React.MouseEvent, track: Track) => {
     e.stopPropagation();
     e.preventDefault();
-    
+
     // Calculate position for the menu
     const rect = e.currentTarget.getBoundingClientRect();
     setMenuPosition({
       x: rect.left,
       y: rect.bottom + window.scrollY
     });
-    
+
     setSelectedTrack(track);
     setShowTrackMenu(true);
   };

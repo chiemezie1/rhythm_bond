@@ -195,3 +195,15 @@ See the [API documentation](src/app/api/README.md) for details on available endp
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+
+
+
+Here are the user accounts that can be used to log in:
+
+Name	Email	Password
+John Doe	john@example.com	password123
+Jane Smith	jane@example.com	password123
+Alex Johnson	alex@example.com	password123
+Maria Garcia	maria@example.com	password123
+David Kim	david@example.com	password123

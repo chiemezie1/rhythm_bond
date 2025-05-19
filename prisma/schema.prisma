@@ -32,6 +32,8 @@ model User {
   recentlyPlayed RecentlyPlayed[]
   playCount     PlayCount[]
   tags          Tag[]
+  genres        Genre[]
+  homeLayout    HomeLayout?
   followers     Follow[]    @relation("following")
   following     Follow[]    @relation("follower")
   posts         Post[]
@@ -95,6 +97,7 @@ model Track {
   recentlyPlayed RecentlyPlayed[]
   playCount   PlayCount[]
   tags        TagTrack[]
+  genres      GenreTrack[]
 }
 
 model Playlist {
@@ -250,4 +253,47 @@ model CommentLike {
   comment   Comment   @relation(fields: [commentId], references: [id], onDelete: Cascade)
 
   @@unique([userId, commentId])
+}
+
+// User-created genres
+model Genre {
+  id          String    @id @default(cuid())
+  name        String
+  description String?   @db.Text
+  coverImage  String?
+  color       String    @default("#3b82f6")
+  isPublic    Boolean   @default(true)
+  userId      String
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tracks      GenreTrack[]
+
+  @@unique([userId, name])
+}
+
+model GenreTrack {
+  id        String    @id @default(cuid())
+  genreId   String
+  trackId   String
+  order     Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  genre     Genre     @relation(fields: [genreId], references: [id], onDelete: Cascade)
+  track     Track     @relation(fields: [trackId], references: [id], onDelete: Cascade)
+
+  @@unique([genreId, trackId])
+}
+
+// User's home page layout preferences
+model HomeLayout {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  layoutConfig  String    @db.Text // JSON string of layout configuration
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

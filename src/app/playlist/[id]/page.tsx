@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import Layout from "@/components/layout/Layout";
@@ -11,7 +12,10 @@ import PlaylistComments from '@/components/social/PlaylistComments';
 import SharePlaylist from '@/components/social/SharePlaylist';
 import TrackMenu from '@/components/music/TrackMenu';
 
-export default function PlaylistPage({ params }: { params: { id: string } }) {
+export default function PlaylistPage({ params: serverParams }: { params: { id: string } }) {
+  const params = useParams();
+  const playlistId = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : '';
+
   const { getPlaylistById, playTrack, addTrackToPlaylist, getPlaylists } = useMusic();
   const { isAuthenticated, user } = useAuth();
   const [playlist, setPlaylist] = useState<UserPlaylist | null>(null);
@@ -31,7 +35,7 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
       setIsLoading(true);
 
       // Get playlist by ID
-      const playlistData = getPlaylistById(params.id);
+      const playlistData = getPlaylistById(playlistId);
 
       if (playlistData) {
         setPlaylist(playlistData);
@@ -49,7 +53,7 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
       setError('Failed to load playlist. Please try again later.');
       setIsLoading(false);
     }
-  }, [params.id, getPlaylistById]);
+  }, [playlistId, getPlaylistById]);
 
   // Handle playing the entire playlist
   const handlePlayPlaylist = () => {
@@ -132,7 +136,7 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
         <div className="max-w-6xl mx-auto">
           <div className="bg-background-card rounded-lg p-8 text-center">
             <h1 className="text-3xl font-bold mb-4">Playlist Not Found</h1>
-            <p className="text-text-secondary mb-6">{error || 'The playlist you're looking for doesn't exist.'}</p>
+            <p className="text-text-secondary mb-6">{error || "The playlist you're looking for doesn't exist."}</p>
             <Link href="/library" className="btn btn-primary">
               Go to Library
             </Link>

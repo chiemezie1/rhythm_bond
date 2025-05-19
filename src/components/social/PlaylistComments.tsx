@@ -141,7 +141,7 @@ export default function PlaylistComments({ playlistId, playlistName }: PlaylistC
       'I feel the same way about it.',
       'Thanks for the feedback!',
       'Glad you enjoyed it!',
-      'I'll add more tracks like that soon.',
+      "I'll add more tracks like that soon.",
       'Which track is your favorite?',
       'Have you checked out my other playlists?',
       'Thanks for listening!',

@@ -10,9 +10,10 @@ interface TrackMenuProps {
   track: Track;
   onClose: () => void;
   position?: { x: number; y: number };
+  onRemove?: () => void;
 }
 
-export default function TrackMenu({ track, onClose, position }: TrackMenuProps) {
+export default function TrackMenu({ track, onClose, position, onRemove }: TrackMenuProps) {
   const {
     toggleFavorite,
     isFavorite,
@@ -137,14 +138,14 @@ export default function TrackMenu({ track, onClose, position }: TrackMenuProps) 
       return;
     }
 
-    // Only fetch playlists if we haven't already
-    if (playlists.length === 0) {
-      setPlaylists(getPlaylists());
-    }
+    // Always get the latest playlists
+    setPlaylists(getPlaylists());
 
-    setShowPlaylistMenu(true);
+    // Toggle the playlist menu
+    setShowPlaylistMenu(!showPlaylistMenu);
     setShowTagsMenu(false);
     setShowGenresMenu(false);
+    setShowShareMenu(false);
   };
 
   // Load tags when menu is opened
@@ -155,17 +156,15 @@ export default function TrackMenu({ track, onClose, position }: TrackMenuProps) 
       return;
     }
 
-    // Only fetch tags if we haven't already
-    if (tags.length === 0) {
-      setTags(getCustomTags());
-    }
-
-    // Always get the latest track tags
+    // Always get the latest tags and track tags
+    setTags(getCustomTags());
     setTrackTags(getTagsForTrack(track.id));
 
-    setShowTagsMenu(true);
+    // Toggle the tags menu
+    setShowTagsMenu(!showTagsMenu);
     setShowPlaylistMenu(false);
     setShowGenresMenu(false);
+    setShowShareMenu(false);
   };
 
   // Load genres when menu is opened
@@ -176,18 +175,20 @@ export default function TrackMenu({ track, onClose, position }: TrackMenuProps) 
       return;
     }
 
-    // Only fetch genres if we haven't already
-    if (genres.length === 0) {
-      setGenres(getGenres());
-    }
+    // Always get the latest genres
+    setGenres(getGenres());
 
     // In a real implementation, we would get the track's genres
-    // For now, we'll just use an empty array
-    setTrackGenres([]);
+    // For now, we'll just use an empty array if we don't have any
+    if (trackGenres.length === 0) {
+      setTrackGenres([]);
+    }
 
-    setShowGenresMenu(true);
+    // Toggle the genres menu
+    setShowGenresMenu(!showGenresMenu);
     setShowPlaylistMenu(false);
     setShowTagsMenu(false);
+    setShowShareMenu(false);
   };
 
   // Add track to playlist
@@ -197,8 +198,13 @@ export default function TrackMenu({ track, onClose, position }: TrackMenuProps) 
     try {
       const success = await addTrackToPlaylist(playlistId, track);
       if (success) {
-        alert(`Added "${track.title}" to playlist`);
+        // Find the playlist name for better feedback
+        const playlist = playlists.find(p => p.id === playlistId);
+        const playlistName = playlist ? playlist.name : 'playlist';
+
+        alert(`Added "${track.title}" to ${playlistName}`);
         setShowPlaylistMenu(false);
+        onClose(); // Close the main menu after successful action
       }
     } catch (error) {
       console.error('Error adding track to playlist:', error);
@@ -219,6 +225,10 @@ export default function TrackMenu({ track, onClose, position }: TrackMenuProps) 
           setNewPlaylistName('');
           setNewPlaylistDescription('');
           setShowPlaylistMenu(false);
+          onClose(); // Close the main menu after successful action
+
+          // Refresh playlists
+          setPlaylists(getPlaylists());
         }
       }
     } catch (error) {
@@ -233,7 +243,14 @@ export default function TrackMenu({ track, onClose, position }: TrackMenuProps) 
 
     addTagToTrack(tagId, track.id).then(success => {
       if (success) {
+        // Find the tag name for better feedback
+        const tag = tags.find(t => t.id === tagId);
+        const tagName = tag ? tag.name : 'tag';
+
+        alert(`Added tag "${tagName}" to "${track.title}"`);
         setTrackTags(getTagsForTrack(track.id));
+        setShowTagsMenu(false);
+        onClose(); // Close the main menu after successful action
       }
     });
   };
@@ -244,6 +261,11 @@ export default function TrackMenu({ track, onClose, position }: TrackMenuProps) 
 
     removeTagFromTrack(tagId, track.id).then(success => {
       if (success) {
+        // Find the tag name for better feedback
+        const tag = tags.find(t => t.id === tagId);
+        const tagName = tag ? tag.name : 'tag';
+
+        alert(`Removed tag "${tagName}" from "${track.title}"`);
         setTrackTags(getTagsForTrack(track.id));
       }
     });
@@ -257,7 +279,10 @@ export default function TrackMenu({ track, onClose, position }: TrackMenuProps) 
       setTags([...tags, newTag]);
       addTagToTrack(newTag.id, track.id).then(success => {
         if (success) {
+          alert(`Created tag "${newTagName}" and added to "${track.title}"`);
           setTrackTags(getTagsForTrack(track.id));
+          setShowTagsMenu(false);
+          onClose(); // Close the main menu after successful action
         }
       });
       setNewTagName('');
@@ -270,11 +295,13 @@ export default function TrackMenu({ track, onClose, position }: TrackMenuProps) 
 
     const success = addTrackToGenre(genreId, track.id);
     if (success) {
-      // In a real implementation, we would update the track's genres
-      // For now, we'll just add the genre to the trackGenres array
+      // Find the genre name for better feedback
       const genre = genres.find(g => g.id === genreId);
       if (genre) {
+        alert(`Added "${track.title}" to ${genre.name} genre`);
         setTrackGenres([...trackGenres, genre]);
+        setShowGenresMenu(false);
+        onClose(); // Close the main menu after successful action
       }
     }
   };
@@ -285,8 +312,11 @@ export default function TrackMenu({ track, onClose, position }: TrackMenuProps) 
 
     const success = removeTrackFromGenre(genreId, track.id);
     if (success) {
-      // In a real implementation, we would update the track's genres
-      // For now, we'll just remove the genre from the trackGenres array
+      // Find the genre name for better feedback
+      const genre = genres.find(g => g.id === genreId);
+      const genreName = genre ? genre.name : 'genre';
+
+      alert(`Removed "${track.title}" from ${genreName} genre`);
       setTrackGenres(trackGenres.filter(g => g.id !== genreId));
     }
   };
@@ -297,10 +327,15 @@ export default function TrackMenu({ track, onClose, position }: TrackMenuProps) 
 
     const newGenre = createGenre(newGenreName, newGenreColor);
     setGenres([...genres, newGenre]);
-    addTrackToGenre(newGenre.id, track.id);
-    // In a real implementation, we would update the track's genres
-    setTrackGenres([...trackGenres, newGenre]);
-    setNewGenreName('');
+    const success = addTrackToGenre(newGenre.id, track.id);
+
+    if (success) {
+      alert(`Created genre "${newGenreName}" and added "${track.title}" to it`);
+      setTrackGenres([...trackGenres, newGenre]);
+      setNewGenreName('');
+      setShowGenresMenu(false);
+      onClose(); // Close the main menu after successful action
+    }
   };
 
   // Don't play this track
@@ -318,8 +353,11 @@ export default function TrackMenu({ track, onClose, position }: TrackMenuProps) 
       return;
     }
 
+    // Set default share message
     setShareMessage(`Check out "${track.title}" by ${track.artist}`);
-    setShowShareMenu(true);
+
+    // Toggle the share menu
+    setShowShareMenu(!showShareMenu);
     setShowPlaylistMenu(false);
     setShowTagsMenu(false);
     setShowGenresMenu(false);
@@ -348,8 +386,26 @@ export default function TrackMenu({ track, onClose, position }: TrackMenuProps) 
         throw new Error('Failed to share track');
       }
 
-      alert(`Shared "${track.title}" to your social feed`);
+      // Provide feedback based on visibility
+      let visibilityText = '';
+      switch (shareVisibility) {
+        case 'public':
+          visibilityText = 'publicly';
+          break;
+        case 'followers':
+          visibilityText = 'with your followers';
+          break;
+        case 'private':
+          visibilityText = 'privately';
+          break;
+      }
+
+      alert(`Shared "${track.title}" ${visibilityText} to your social feed`);
       setShowShareMenu(false);
+      onClose(); // Close the main menu after successful action
+
+      // Redirect to social page to see the shared post
+      window.location.href = '/social';
     } catch (error) {
       console.error('Error sharing track:', error);
       alert('Failed to share track. Please try again.');
@@ -405,7 +461,7 @@ export default function TrackMenu({ track, onClose, position }: TrackMenuProps) 
           {showPlaylistMenu && (
             <div
               ref={playlistMenuRef}
-              className="absolute left-full top-0 bg-dark-lighter rounded-lg shadow-lg w-64 z-10 ml-2"
+              className="absolute left-full top-0 bg-dark-lighter rounded-lg shadow-lg w-64 z-50 ml-2"
             >
               <div className="p-3 border-b border-dark-lightest">
                 <h3 className="font-medium text-white">Add to Playlist</h3>
@@ -479,7 +535,7 @@ export default function TrackMenu({ track, onClose, position }: TrackMenuProps) 
           {showTagsMenu && (
             <div
               ref={tagsMenuRef}
-              className="absolute left-full top-0 bg-dark-lighter rounded-lg shadow-lg w-64 z-10 ml-2"
+              className="absolute left-full top-0 bg-dark-lighter rounded-lg shadow-lg w-64 z-50 ml-2"
             >
               <div className="p-3 border-b border-dark-lightest">
                 <h3 className="font-medium text-white">Manage Tags</h3>
@@ -554,7 +610,7 @@ export default function TrackMenu({ track, onClose, position }: TrackMenuProps) 
           {showGenresMenu && (
             <div
               ref={genresMenuRef}
-              className="absolute left-full top-0 bg-dark-lighter rounded-lg shadow-lg w-64 z-10 ml-2"
+              className="absolute left-full top-0 bg-dark-lighter rounded-lg shadow-lg w-64 z-50 ml-2"
             >
               <div className="p-3 border-b border-dark-lightest">
                 <h3 className="font-medium text-white">Add to Genre</h3>
@@ -635,7 +691,7 @@ export default function TrackMenu({ track, onClose, position }: TrackMenuProps) 
           {showShareMenu && (
             <div
               ref={shareMenuRef}
-              className="absolute left-full top-0 bg-dark-lighter rounded-lg shadow-lg w-64 z-10 ml-2"
+              className="absolute left-full top-0 bg-dark-lighter rounded-lg shadow-lg w-64 z-50 ml-2"
             >
               <div className="p-3 border-b border-dark-lightest">
                 <h3 className="font-medium text-white">Share to Social</h3>
@@ -682,6 +738,21 @@ export default function TrackMenu({ track, onClose, position }: TrackMenuProps) 
           </svg>
           <span>Don't Play This</span>
         </button>
+
+        {onRemove && (
+          <button
+            className="flex items-center gap-3 w-full px-4 py-2 text-left hover:bg-dark-lightest transition-colors"
+            onClick={() => {
+              onRemove();
+              onClose();
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            <span className="text-red-500">Remove from Collection</span>
+          </button>
+        )}
       </div>
     </div>
   );

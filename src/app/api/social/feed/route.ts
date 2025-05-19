@@ -19,80 +19,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const filter = searchParams.get('filter') || 'all';
 
-    // Mock data for social feed when database is not available
-    const mockPosts = [
-      {
-        id: '1',
-        content: 'Just discovered this amazing track! 🎵',
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-        user: {
-          id: '1',
-          name: 'John Doe',
-          username: 'johndoe',
-          image: '/images/logo.png'
-        },
-        likes: [{ userId: '2' }, { userId: '3' }],
-        comments: [
-          {
-            id: '1',
-            content: 'Great find! I love this artist.',
-            createdAt: new Date(Date.now() - 1800000).toISOString(),
-            user: {
-              id: '2',
-              name: 'Jane Smith',
-              username: 'janesmith',
-              image: '/images/logo_bg_white.png'
-            },
-            likes: []
-          }
-        ],
-        mediaType: 'track',
-        mediaId: 'afro_001'
-      },
-      {
-        id: '2',
-        content: 'My current playlist is fire! Check it out.',
-        createdAt: new Date(Date.now() - 7200000).toISOString(),
-        user: {
-          id: '3',
-          name: 'Alex Johnson',
-          username: 'alexj',
-          image: '/images/man_with_headse.png'
-        },
-        likes: [{ userId: '1' }],
-        comments: [],
-        mediaType: 'playlist',
-        mediaId: 'playlist_001'
-      },
-      {
-        id: '3',
-        content: 'Who else is loving the new album by this artist?',
-        createdAt: new Date(Date.now() - 10800000).toISOString(),
-        user: {
-          id: '4',
-          name: 'Sarah Williams',
-          username: 'sarahw',
-          image: '/images/two_people_enjoying_music.png'
-        },
-        likes: [{ userId: '1' }, { userId: '2' }, { userId: '3' }],
-        comments: [
-          {
-            id: '2',
-            content: 'It\'s their best work yet!',
-            createdAt: new Date(Date.now() - 9000000).toISOString(),
-            user: {
-              id: '1',
-              name: 'John Doe',
-              username: 'johndoe',
-              image: '/images/logo.png'
-            },
-            likes: [{ userId: '4' }]
-          }
-        ],
-        mediaType: 'album',
-        mediaId: 'album_001'
-      }
-    ];
+    // No mock data - we'll use the database
 
     try {
       let posts;
@@ -248,25 +175,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ posts });
     } catch (dbError) {
       console.error('Error fetching social feed from database:', dbError);
-
-      // Filter mock posts based on the filter
-      let filteredPosts = mockPosts;
-
-      if (filter === 'following') {
-        // Only return posts from users 1 and 2 (mock following)
-        filteredPosts = mockPosts.filter(post =>
-          post.user.id === '1' || post.user.id === '2'
-        );
-      } else if (filter === 'trending') {
-        // Sort by engagement (likes + comments)
-        filteredPosts = [...mockPosts].sort((a, b) => {
-          const aEngagement = a.likes.length + a.comments.length;
-          const bEngagement = b.likes.length + b.comments.length;
-          return bEngagement - aEngagement;
-        });
-      }
-
-      return NextResponse.json({ posts: filteredPosts });
+      return NextResponse.json({ posts: [] });
     }
   } catch (error) {
     console.error('Error fetching social feed:', error);

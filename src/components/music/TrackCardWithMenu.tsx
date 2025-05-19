@@ -13,6 +13,7 @@ interface TrackCardWithMenuProps {
   showListeners?: boolean;
   showDuration?: boolean;
   onPlay?: (track: Track) => void;
+  onRemove?: () => void;
   compact?: boolean;
 }
 
@@ -24,6 +25,7 @@ export default function TrackCardWithMenu({
   showListeners = false,
   showDuration = true,
   onPlay,
+  onRemove,
   compact = false,
 }: TrackCardWithMenuProps) {
   const [showMenu, setShowMenu] = useState(false);
@@ -32,22 +34,33 @@ export default function TrackCardWithMenu({
 
   const handleMenuClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
+
     // If menu is already showing, hide it
     if (showMenu) {
       setShowMenu(false);
       return;
     }
-    
+
     // Calculate position for the menu
     if (menuButtonRef.current) {
       const rect = menuButtonRef.current.getBoundingClientRect();
-      setMenuPosition({
-        x: rect.right,
-        y: rect.top
-      });
+      // Position the menu to the left of the button if there's not enough space on the right
+      const windowWidth = window.innerWidth;
+      const spaceOnRight = windowWidth - rect.right;
+
+      if (spaceOnRight < 350) { // 350px is enough for menu + submenu
+        setMenuPosition({
+          x: rect.left - 270, // Position to the left with some offset
+          y: rect.top
+        });
+      } else {
+        setMenuPosition({
+          x: rect.right,
+          y: rect.top
+        });
+      }
     }
-    
+
     setShowMenu(true);
   };
 
@@ -63,24 +76,25 @@ export default function TrackCardWithMenu({
         onPlay={onPlay}
         compact={compact}
       />
-      
-      {/* Three-dot menu button */}
+
+      {/* Three-dot menu button - always visible */}
       <button
         ref={menuButtonRef}
-        className="absolute top-3 right-3 p-1 rounded-full bg-dark-lighter opacity-0 group-hover:opacity-100 transition-opacity hover:bg-dark-lightest z-10"
+        className="absolute top-3 right-3 p-1 rounded-full bg-dark-lighter hover:bg-dark-lightest z-10"
         onClick={handleMenuClick}
       >
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
         </svg>
       </button>
-      
+
       {/* Track menu */}
       {showMenu && menuPosition && (
         <TrackMenu
           track={track}
           onClose={() => setShowMenu(false)}
           position={menuPosition}
+          onRemove={onRemove}
         />
       )}
     </div>

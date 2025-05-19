@@ -175,13 +175,12 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
 
     try {
       // Create a post via the API
-      const response = await fetch('/api/social/share', {
+      const response = await fetch('/api/social/posts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          type: 'status',
           content: postText,
           visibility: 'public',
         }),
@@ -214,14 +213,11 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
     }
 
     try {
-      const response = await fetch('/api/social/likes', {
+      const response = await fetch(`/api/social/posts/${id}/like`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          postId: id,
-        }),
+        }
       });
 
       if (!response.ok) {
@@ -247,13 +243,12 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
     }
 
     try {
-      const response = await fetch('/api/social/comments', {
+      const response = await fetch(`/api/social/posts/${id}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          postId: id,
           content: commentText,
         }),
       });
@@ -282,13 +277,12 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
 
     // For now, we'll just increment the share count
     try {
-      const response = await fetch('/api/social/share', {
+      const response = await fetch('/api/social/posts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          type: 'share',
           content: 'Shared a post',
           mediaId: id,
           mediaType: 'post',

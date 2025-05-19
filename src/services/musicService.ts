@@ -1,6 +1,6 @@
 /**
  * Music Service
- * 
+ *
  * This service manages the music database using YouTube links.
  * It provides functions to get tracks by genre, search for tracks, and get track details.
  */
@@ -53,7 +53,7 @@ export const getYoutubeIdFromUrl = (url: string): string => {
         return urlParts[1].split('?')[0].split('&')[0];
       }
     }
-    
+
     // If we can't parse the URL, return an empty string
     return '';
   } catch (error) {
@@ -71,11 +71,11 @@ export const getYoutubeThumbnail = (videoId: string): string => {
 const fetchMusicData = async (): Promise<MusicDatabase> => {
   try {
     const response = await fetch('/api/music');
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch music data: ${response.statusText}`);
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Error fetching music data:', error);
@@ -86,12 +86,20 @@ const fetchMusicData = async (): Promise<MusicDatabase> => {
 // Function to search tracks
 const searchTracks = async (query: string, limit: number = 10): Promise<Track[]> => {
   try {
-    const response = await fetch(`/api/music?query=${encodeURIComponent(query)}&limit=${limit}`);
-    
+    // If query is empty, return an empty array to prevent unnecessary API calls
+    if (!query || query.trim() === '') {
+      return [];
+    }
+
+    // Normalize the query (trim and lowercase)
+    const normalizedQuery = query.trim().toLowerCase();
+
+    const response = await fetch(`/api/music?query=${encodeURIComponent(normalizedQuery)}&limit=${limit}`);
+
     if (!response.ok) {
       throw new Error(`Failed to search tracks: ${response.statusText}`);
     }
-    
+
     const data = await response.json();
     return data.tracks || [];
   } catch (error) {
@@ -104,11 +112,11 @@ const searchTracks = async (query: string, limit: number = 10): Promise<Track[]>
 const getTracksByGenre = async (genreId: string): Promise<Track[]> => {
   try {
     const response = await fetch(`/api/music?genre=${encodeURIComponent(genreId)}`);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to get tracks by genre: ${response.statusText}`);
     }
-    
+
     const data = await response.json();
     return data.genre?.tracks || [];
   } catch (error) {
@@ -121,11 +129,11 @@ const getTracksByGenre = async (genreId: string): Promise<Track[]> => {
 const getTrendingTracks = async (limit: number = 10): Promise<Track[]> => {
   try {
     const response = await fetch(`/api/music?trending=true&limit=${limit}`);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to get trending tracks: ${response.statusText}`);
     }
-    
+
     const data = await response.json();
     return data.tracks || [];
   } catch (error) {
@@ -138,11 +146,11 @@ const getTrendingTracks = async (limit: number = 10): Promise<Track[]> => {
 const getSimilarTracks = async (track: Track, limit: number = 5): Promise<Track[]> => {
   try {
     const response = await fetch(`/api/music?similar=${track.id}&limit=${limit}`);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to get similar tracks: ${response.statusText}`);
     }
-    
+
     const data = await response.json();
     return data.tracks || [];
   } catch (error) {

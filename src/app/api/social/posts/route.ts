@@ -3,37 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
 
-// Mock data for posts when database is not available
-const mockPosts = [
-  {
-    id: '1',
-    content: 'Just discovered this amazing track! 🎵',
-    createdAt: new Date(Date.now() - 3600000).toISOString(),
-    user: {
-      id: '1',
-      name: 'John Doe',
-      username: 'johndoe',
-      image: 'https://randomuser.me/api/portraits/men/1.jpg'
-    },
-    likes: [{ userId: '2' }, { userId: '3' }],
-    comments: [
-      {
-        id: '1',
-        content: 'Great find! I love this artist.',
-        createdAt: new Date(Date.now() - 1800000).toISOString(),
-        user: {
-          id: '2',
-          name: 'Jane Smith',
-          username: 'janesmith',
-          image: 'https://randomuser.me/api/portraits/women/2.jpg'
-        },
-        likes: []
-      }
-    ],
-    mediaType: 'track',
-    mediaId: 'afro_001'
-  }
-];
+// No mock data - we'll use the database
 
 // GET handler to fetch posts
 export async function GET(req: NextRequest) {
@@ -97,9 +67,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ posts });
     } catch (dbError) {
       console.error('Error fetching posts from database:', dbError);
-      
-      // Return mock data if database is not available
-      return NextResponse.json({ posts: mockPosts });
+      return NextResponse.json({ posts: [] });
     }
   } catch (error) {
     console.error('Error processing posts request:', error);
@@ -176,26 +144,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ post });
     } catch (dbError) {
       console.error('Error creating post in database:', dbError);
-      
-      // Return mock success response if database is not available
-      const mockPost = {
-        id: `post-${Date.now()}`,
-        content,
-        mediaType,
-        mediaId,
-        visibility,
-        createdAt: new Date().toISOString(),
-        user: {
-          id: session.user.id,
-          name: session.user.name,
-          image: session.user.image,
-          username: session.user.email?.split('@')[0]
-        },
-        likes: [],
-        comments: []
-      };
-      
-      return NextResponse.json({ post: mockPost });
+      return NextResponse.json({ error: 'Failed to create post' }, { status: 500 });
     }
   } catch (error) {
     console.error('Error processing create post request:', error);

@@ -3,25 +3,25 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useMusic } from "@/contexts/MusicContext"
+import { useAuth } from "@/hooks/useAuth"
 
 // Define navigation items
 const mainNavItems = [
   { name: "Home", icon: "home", path: "/" },
-  { name: "Explore", icon: "explore", path: "/explore" },
-  { name: "Search", icon: "search", path: "/search" },
-  { name: "Library", icon: "library", path: "/library" }
+  { name: "Library", icon: "library", path: "/library" },
+  { name: "Search", icon: "search", path: "/search" }
 ]
 
 const libraryItems = [
   { name: "Recently Played", icon: "history", path: "/history" },
   { name: "Favorites", icon: "favorite", path: "/favorites" },
-  { name: "Your Playlists", icon: "playlist", path: "/playlists" },
-  { name: "Custom Tags", icon: "tag", path: "/tags" },
-  { name: "Genres", icon: "album", path: "/genres" },
-  { name: "Most Played", icon: "trending", path: "/most-played" },
+  { name: "Your Playlists", icon: "playlist", path: "/playlist" },
+  { name: "Most Played", icon: "trending", path: "/most-played" }
 ]
 
-const genreItems = [
+// Default genre items for non-authenticated users
+const defaultGenreItems = [
   { name: "Afrobeats & Global Pop", path: "/genre/afrobeats" },
   { name: "Pop", path: "/genre/pop" },
   { name: "Hip-Hop & Trap", path: "/genre/hiphop" },
@@ -30,19 +30,47 @@ const genreItems = [
 ]
 
 const socialItems = [
-  { name: "Feed", icon: "share", path: "/social" },
-  { name: "Friends", icon: "following", path: "/social/friends" },
-  { name: "Discover", icon: "explore", path: "/social/discover" },
+  { name: "Social Feed", icon: "share", path: "/social" },
   { name: "Profile", icon: "profile", path: "/profile" }
 ]
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const { isAuthenticated } = useAuth()
+  const { getGenres } = useMusic()
+  const [userGenres, setUserGenres] = useState(defaultGenreItems)
   const [expandedSections, setExpandedSections] = useState({
     library: true,
     genres: false,
     social: false,
   })
+
+  // Load user genres
+  useEffect(() => {
+    const loadUserGenres = async () => {
+      if (isAuthenticated) {
+        try {
+          const genres = await getGenres()
+          if (genres && genres.length > 0) {
+            // Format genres for sidebar
+            const formattedGenres = genres.map((genre: any) => ({
+              id: genre.id,
+              name: genre.name,
+              path: `/genre/${genre.id}`
+            }))
+            setUserGenres(formattedGenres)
+          }
+        } catch (error) {
+          console.error('Error loading user genres:', error)
+          setUserGenres(defaultGenreItems)
+        }
+      } else {
+        setUserGenres(defaultGenreItems)
+      }
+    }
+
+    loadUserGenres()
+  }, [isAuthenticated, getGenres])
 
   // Set expanded sections based on current path
   useEffect(() => {
@@ -55,7 +83,7 @@ export default function Sidebar() {
     }
 
     // Check genre items
-    const genreMatch = genreItems.find((item) => pathname === item.path || pathname.startsWith(item.path + "/"))
+    const genreMatch = userGenres.find((item) => pathname === item.path || pathname.startsWith(item.path + "/"))
 
     if (genreMatch) {
       setExpandedSections((prev) => ({ ...prev, genres: true }))
@@ -466,10 +494,10 @@ export default function Sidebar() {
         </button>
 
         {expandedSections.genres && (
-          <div className="mt-1 ml-2 grid grid-cols-2 gap-1">
-            {genreItems.map((item) => (
+          <div className="mt-1 ml-2 flex flex-col gap-1">
+            {userGenres.map((item) => (
               <Link
-                key={item.name}
+                key={item.id || item.name}
                 href={item.path}
                 className={`px-3 py-1.5 rounded-lg text-xs transition-colors ${
                   isActive(item.path) ? "bg-dark-lightest text-white" : "text-gray-300 hover:bg-dark-lightest"
@@ -478,6 +506,18 @@ export default function Sidebar() {
                 {item.name}
               </Link>
             ))}
+
+            {isAuthenticated && (
+              <Link
+                href="/categories"
+                className="px-3 py-1.5 rounded-lg text-xs text-primary hover:bg-dark-lightest transition-colors flex items-center gap-1"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Manage Genres
+              </Link>
+            )}
           </div>
         )}
       </div>

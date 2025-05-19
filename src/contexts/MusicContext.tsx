@@ -28,6 +28,7 @@ interface MusicContextType {
   getTrendingTracks: (limit?: number) => Promise<Track[]>;
   getRecentlyPlayedTracks: (limit?: number) => Promise<Track[]>;
   getSimilarTracks: (track: Track, limit?: number) => Promise<Track[]>;
+  getTrackById: (trackId: string) => Track | null;
 
   // User data - Recently played
   addToRecentlyPlayed: (track: Track) => Promise<void>;
@@ -59,9 +60,17 @@ interface MusicContextType {
 
   // Genre-related functions
   getGenres: () => any[];
-  createGenre: (name: string, color: string) => any;
-  addTrackToGenre: (genreId: string, trackId: string) => boolean;
-  removeTrackFromGenre: (genreId: string, trackId: string) => boolean;
+  createGenre: (name: string, color: string, description?: string) => Promise<any>;
+  addTrackToGenre: (genreId: string, trackId: string) => Promise<boolean>;
+  removeTrackFromGenre: (genreId: string, trackId: string) => Promise<boolean>;
+  getGenreById: (genreId: string) => Promise<any>;
+  updateGenre: (genreId: string, data: any) => Promise<any>;
+  deleteGenre: (genreId: string) => Promise<boolean>;
+  updateGenreOrder: (genres: any[]) => Promise<boolean>;
+
+  // Home layout functions
+  getHomeLayout: () => Promise<any>;
+  updateHomeLayout: (layoutConfig: any) => Promise<any>;
 }
 
 // Create the context
@@ -354,6 +363,10 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Search for tracks
   const searchTracksFunc = async (query: string): Promise<Track[]> => {
+    // If query is empty, return an empty array to prevent unnecessary API calls
+    if (!query || query.trim() === '') {
+      return [];
+    }
     return await musicService.searchTracks(query);
   };
 
@@ -654,41 +667,218 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return mostPlayed.slice(0, limit);
   };
 
+  // Genre-related functions (old implementation removed)
+
   // Genre-related functions
-  const getGenres = () => {
-    // In a real implementation, this would fetch genres from the database
-    // For now, we'll return a static list
-    return [
-      { id: 'afrobeats', name: 'Afrobeats & Global Pop', color: '#10b981' },
-      { id: 'pop', name: 'Pop', color: '#ec4899' },
-      { id: 'hiphop', name: 'Hip-Hop & Trap', color: '#3b82f6' },
-      { id: 'rnb', name: 'R&B', color: '#8b5cf6' },
-      { id: 'blues', name: 'Blues', color: '#f59e0b' }
-    ];
+  const getGenres = async () => {
+    if (!userId) {
+      return [];
+    }
+
+    try {
+      const response = await fetch('/api/user/data/genres');
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      }
+      return [];
+    } catch (error) {
+      console.error('Error getting genres:', error);
+      return [];
+    }
   };
 
-  const createGenre = (name: string, color: string) => {
-    // In a real implementation, this would create a genre in the database
-    // For now, we'll just return a mock genre
-    return {
-      id: `genre-${Date.now()}`,
-      name,
-      color
-    };
+  const getGenreById = async (genreId: string) => {
+    if (!userId) {
+      return null;
+    }
+
+    try {
+      const response = await fetch(`/api/user/data/genres/${genreId}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error(`Error getting genre ${genreId}:`, error);
+      return null;
+    }
   };
 
-  const addTrackToGenre = (genreId: string, trackId: string) => {
-    // In a real implementation, this would add the track to the genre in the database
-    // For now, we'll just return true to indicate success
-    console.log(`Adding track ${trackId} to genre ${genreId}`);
-    return true;
+  const createGenre = async (name: string, color: string, description?: string) => {
+    if (!userId) {
+      return null;
+    }
+
+    try {
+      const response = await fetch('/api/user/data/genres', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, color, description })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error creating genre:', error);
+      return null;
+    }
   };
 
-  const removeTrackFromGenre = (genreId: string, trackId: string) => {
-    // In a real implementation, this would remove the track from the genre in the database
-    // For now, we'll just return true to indicate success
-    console.log(`Removing track ${trackId} from genre ${genreId}`);
-    return true;
+  const updateGenre = async (genreId: string, data: any) => {
+    if (!userId) {
+      return null;
+    }
+
+    try {
+      const response = await fetch(`/api/user/data/genres/${genreId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (response.ok) {
+        const updatedGenre = await response.json();
+        return updatedGenre;
+      }
+      return null;
+    } catch (error) {
+      console.error(`Error updating genre ${genreId}:`, error);
+      return null;
+    }
+  };
+
+  const deleteGenre = async (genreId: string) => {
+    if (!userId) {
+      return false;
+    }
+
+    try {
+      const response = await fetch(`/api/user/data/genres/${genreId}`, {
+        method: 'DELETE'
+      });
+
+      return response.ok;
+    } catch (error) {
+      console.error(`Error deleting genre ${genreId}:`, error);
+      return false;
+    }
+  };
+
+  const updateGenreOrder = async (genres: any[]) => {
+    if (!userId) {
+      return false;
+    }
+
+    try {
+      const response = await fetch('/api/user/data/genres', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ genres })
+      });
+
+      return response.ok;
+    } catch (error) {
+      console.error('Error updating genre order:', error);
+      return false;
+    }
+  };
+
+  const addTrackToGenre = async (genreId: string, trackId: string) => {
+    if (!userId) {
+      return false;
+    }
+
+    try {
+      const response = await fetch(`/api/user/data/genres/${genreId}/tracks`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ trackId })
+      });
+
+      return response.ok;
+    } catch (error) {
+      console.error(`Error adding track ${trackId} to genre ${genreId}:`, error);
+      return false;
+    }
+  };
+
+  const removeTrackFromGenre = async (genreId: string, trackId: string) => {
+    if (!userId) {
+      return false;
+    }
+
+    try {
+      const response = await fetch(`/api/user/data/genres/${genreId}/tracks/${trackId}`, {
+        method: 'DELETE'
+      });
+
+      return response.ok;
+    } catch (error) {
+      console.error(`Error removing track ${trackId} from genre ${genreId}:`, error);
+      return false;
+    }
+  };
+
+  // Home layout functions
+  const getHomeLayout = async () => {
+    if (!userId) {
+      return null;
+    }
+
+    try {
+      const response = await fetch('/api/user/data/home-layout');
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting home layout:', error);
+      return null;
+    }
+  };
+
+  const updateHomeLayout = async (layoutConfig: any) => {
+    if (!userId) {
+      return null;
+    }
+
+    try {
+      const response = await fetch('/api/user/data/home-layout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ layoutConfig: JSON.stringify(layoutConfig) })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error updating home layout:', error);
+      return null;
+    }
+  };
+
+  // Get track by ID
+  const getTrackById = (trackId: string): Track | null => {
+    return allTracks.find(track => track.id === trackId) || null;
   };
 
   // Create the context value
@@ -714,6 +904,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     getTrendingTracks: getTrendingTracksFunc,
     getRecentlyPlayedTracks: getRecentlyPlayedTracksFunc,
     getSimilarTracks: getSimilarTracksFunc,
+    getTrackById,
 
     // User data - Recently played
     addToRecentlyPlayed,
@@ -747,7 +938,15 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     getGenres,
     createGenre,
     addTrackToGenre,
-    removeTrackFromGenre
+    removeTrackFromGenre,
+    getGenreById,
+    updateGenre,
+    deleteGenre,
+    updateGenreOrder,
+
+    // Home layout functions
+    getHomeLayout,
+    updateHomeLayout
   };
 
   return (

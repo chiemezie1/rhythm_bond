@@ -56,7 +56,7 @@ export async function GET(
       return NextResponse.json({ comments });
     } catch (dbError) {
       console.error('Error fetching comments from database:', dbError);
-      
+
       // Return empty array if database is not available
       return NextResponse.json({ comments: [] });
     }
@@ -131,25 +131,10 @@ export async function POST(
       return NextResponse.json({ comment });
     } catch (dbError) {
       console.error('Error creating comment in database:', dbError);
-      
-      // Return mock comment if database is not available
-      const mockComment = {
-        id: `comment-${Date.now()}`,
-        content,
-        postId,
-        userId: session.user.id,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        user: {
-          id: session.user.id,
-          name: session.user.name,
-          image: session.user.image,
-          username: session.user.email?.split('@')[0]
-        },
-        likes: []
-      };
-      
-      return NextResponse.json({ comment: mockComment });
+      return NextResponse.json(
+        { error: 'Failed to create comment' },
+        { status: 500 }
+      );
     }
   } catch (error) {
     console.error('Error processing comment request:', error);

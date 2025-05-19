@@ -327,18 +327,138 @@ async function createInteractions(users: any[], posts: any[]) {
   }
 }
 
+// Default genres with their colors
+const defaultGenres = [
+  {
+    name: 'Afrobeats & Global Pop',
+    description: 'Vibrant rhythms and melodies from Africa and around the world',
+    color: '#6366f1', // Indigo
+    coverImage: '/images/man_with_headse.png',
+    order: 0
+  },
+  {
+    name: 'Pop',
+    description: 'Catchy, popular music with wide appeal',
+    color: '#ec4899', // Pink
+    coverImage: '/images/two_people_enjoying_music.png',
+    order: 1
+  },
+  {
+    name: 'Hip-Hop & Trap',
+    description: 'Urban beats with powerful lyrics and bass',
+    color: '#f59e0b', // Amber
+    coverImage: '/images/logo_bg_white.png',
+    order: 2
+  },
+  {
+    name: 'R&B',
+    description: 'Smooth, soulful sounds with emotional depth',
+    color: '#8b5cf6', // Violet
+    coverImage: '/images/logo.png',
+    order: 3
+  },
+  {
+    name: 'Blues',
+    description: 'Soulful expressions rooted in African-American history',
+    color: '#3b82f6', // Blue
+    coverImage: '/images/man_with_headse.png',
+    order: 4
+  },
+  {
+    name: 'Trending',
+    description: 'Find your next favorite track',
+    color: '#10b981', // Emerald
+    coverImage: '/images/two_people_enjoying_music.png',
+    order: 5
+  }
+];
+
+// Default home layout configuration
+const defaultHomeLayout = {
+  sections: [
+    { type: 'musicCategories', visible: true, order: 0 },
+    { type: 'recentlyPlayed', visible: true, order: 1 },
+    { type: 'favorites', visible: true, order: 2 },
+    { type: 'mostPlayed', visible: true, order: 3 },
+    { type: 'playlists', visible: true, order: 4 },
+    { type: 'recommended', visible: true, order: 5 }
+  ],
+  genreIds: [] // Will be populated with the IDs of the created genres
+};
+
 async function createUserData(users: any[], tracks: any[]) {
   // Check if user data already exists
   const existingRecentlyPlayedCount = await prisma.recentlyPlayed.count();
   const existingFavoriteCount = await prisma.favorite.count();
   const existingPlayCountCount = await prisma.playCount.count();
+  const existingGenreCount = await prisma.genre.count();
 
   if (existingRecentlyPlayedCount > 0 || existingFavoriteCount > 0 || existingPlayCountCount > 0) {
-    console.log(`Found existing user data (${existingRecentlyPlayedCount} recently played, ${existingFavoriteCount} favorites, ${existingPlayCountCount} play counts), skipping user data creation`);
-    return;
+    console.log(`Found existing user data (${existingRecentlyPlayedCount} recently played, ${existingFavoriteCount} favorites, ${existingPlayCountCount} play counts), skipping basic user data creation`);
   }
 
   for (const user of users) {
+    // Create default genres for each user
+    const createdGenreIds: string[] = [];
+
+    // Check if the user already has genres
+    const userGenreCount = await prisma.genre.count({
+      where: { userId: user.id }
+    });
+
+    if (userGenreCount === 0) {
+      console.log(`Creating default genres for user ${user.name}`);
+
+      for (const genre of defaultGenres) {
+        const newGenre = await prisma.genre.create({
+          data: {
+            name: genre.name,
+            description: genre.description,
+            color: genre.color,
+            coverImage: genre.coverImage,
+            order: genre.order,
+            userId: user.id
+          }
+        });
+        createdGenreIds.push(newGenre.id);
+      }
+
+      // Create or update home layout for the user
+      const homeLayoutConfig = {
+        ...defaultHomeLayout,
+        genreIds: createdGenreIds.slice(0, 6) // Use the first 6 genres
+      };
+
+      const existingHomeLayout = await prisma.homeLayout.findUnique({
+        where: { userId: user.id }
+      });
+
+      if (!existingHomeLayout) {
+        await prisma.homeLayout.create({
+          data: {
+            userId: user.id,
+            layoutConfig: JSON.stringify(homeLayoutConfig)
+          }
+        });
+        console.log(`Created default home layout for user ${user.name}`);
+      } else {
+        await prisma.homeLayout.update({
+          where: { userId: user.id },
+          data: {
+            layoutConfig: JSON.stringify(homeLayoutConfig)
+          }
+        });
+        console.log(`Updated existing home layout for user ${user.name}`);
+      }
+    } else {
+      console.log(`User ${user.name} already has genres, skipping default genre creation`);
+    }
+
+    // Skip basic user data creation if it already exists
+    if (existingRecentlyPlayedCount > 0 || existingFavoriteCount > 0 || existingPlayCountCount > 0) {
+      continue;
+    }
+
     // Create recently played
     const recentTracks = getRandomSubarray(tracks, 5);
     for (let i = 0; i < recentTracks.length; i++) {

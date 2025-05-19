@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import UserProfile from '@/components/UserProfile';
-import SocialFeed from '@/components/SocialFeed';
 import { useAuth } from '@/hooks/useAuth';
 import socialService from '@/services/socialService';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import UserProfile from '@/components/user/UserProfile';
+import SocialFeed from '@/components/social/SocialFeed';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -16,31 +16,31 @@ export default function UserProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('profile');
-  
+
   // Fetch user ID from username
   useEffect(() => {
     const fetchUserId = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         // Check if this is the current user
         if (isAuthenticated && user && user.username === username) {
           setUserId(user.id);
           setIsLoading(false);
           return;
         }
-        
+
         // Find user by username
         const users = await socialService.searchUsers(username);
         const matchedUser = users.find(u => u.username === username);
-        
+
         if (matchedUser) {
           setUserId(matchedUser.id);
         } else {
           setError('User not found');
         }
-        
+
         setIsLoading(false);
       } catch (err) {
         console.error('Error fetching user:', err);
@@ -48,10 +48,10 @@ export default function UserProfilePage() {
         setIsLoading(false);
       }
     };
-    
+
     fetchUserId();
   }, [username, isAuthenticated, user]);
-  
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -59,7 +59,7 @@ export default function UserProfilePage() {
       </div>
     );
   }
-  
+
   if (error || !userId) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -69,26 +69,26 @@ export default function UserProfilePage() {
       </div>
     );
   }
-  
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Tabs */}
       <div className="mb-8 border-b border-dark-lightest">
         <div className="flex overflow-x-auto">
-          <button 
+          <button
             className={`px-4 py-2 border-b-2 ${
-              activeTab === 'profile' 
-                ? 'border-primary text-white font-medium' 
+              activeTab === 'profile'
+                ? 'border-primary text-white font-medium'
                 : 'border-transparent text-gray-400 hover:text-white'
             }`}
             onClick={() => setActiveTab('profile')}
           >
             Profile
           </button>
-          <button 
+          <button
             className={`px-4 py-2 border-b-2 ${
-              activeTab === 'posts' 
-                ? 'border-primary text-white font-medium' 
+              activeTab === 'posts'
+                ? 'border-primary text-white font-medium'
                 : 'border-transparent text-gray-400 hover:text-white'
             }`}
             onClick={() => setActiveTab('posts')}
@@ -97,7 +97,7 @@ export default function UserProfilePage() {
           </button>
         </div>
       </div>
-      
+
       {/* Content */}
       {activeTab === 'profile' ? (
         <UserProfile userId={userId} />

@@ -13,14 +13,10 @@ interface SocialFeedProps {
 
 export default function SimplifiedSocialFeed({ filter = 'all' }: SocialFeedProps) {
   const { isAuthenticated, user } = useAuth();
-  const { getTrackById: getTrackByIdOriginal, getPlaylistById: getPlaylistByIdOriginal } = useMusic();
+  const { getTrackById, getPlaylistById } = useMusic();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Create stable references to the functions to prevent infinite re-renders
-  const getTrackById = useCallback((trackId: string) => getTrackByIdOriginal(trackId), [getTrackByIdOriginal]);
-  const getPlaylistById = useCallback((playlistId: string) => getPlaylistByIdOriginal(playlistId), [getPlaylistByIdOriginal]);
 
   // Fetch posts when component mounts or filter changes
   useEffect(() => {
@@ -93,8 +89,7 @@ export default function SimplifiedSocialFeed({ filter = 'all' }: SocialFeedProps
       isMounted = false;
     };
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter]);
+  }, [filter, getTrackById, getPlaylistById]);
 
   // Handle creating a new post
   const handleCreatePost = async (content: string, mediaType?: string, mediaId?: string) => {
