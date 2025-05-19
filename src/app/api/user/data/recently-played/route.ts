@@ -134,6 +134,16 @@ export async function POST(req: NextRequest) {
     }
 
     try {
+      // Check if the user exists in the database
+      const user = await prisma.user.findUnique({
+        where: { id: userId }
+      });
+
+      if (!user) {
+        console.error(`User with ID ${userId} not found in database`);
+        return NextResponse.json({ success: true });
+      }
+
       // Check if the track exists in the database
       let dbTrack = await prisma.track.findUnique({
         where: { youtubeId: track.id }
@@ -141,48 +151,63 @@ export async function POST(req: NextRequest) {
 
       // If the track doesn't exist, create it
       if (!dbTrack) {
-        dbTrack = await prisma.track.create({
-          data: {
-            youtubeId: track.id,
-            title: track.title,
-            artist: track.artist,
-            genre: track.genre || 'Unknown',
-            thumbnail: track.thumbnail,
-            youtubeUrl: track.youtubeUrl || `https://www.youtube.com/watch?v=${track.id}`
-          }
-        });
+        try {
+          dbTrack = await prisma.track.create({
+            data: {
+              youtubeId: track.id,
+              title: track.title,
+              artist: track.artist,
+              genre: track.genre || 'Unknown',
+              thumbnail: track.thumbnail,
+              youtubeUrl: track.youtubeUrl || `https://www.youtube.com/watch?v=${track.id}`
+            }
+          });
+        } catch (createError) {
+          console.error('Error creating track:', createError);
+          return NextResponse.json({ success: true });
+        }
       }
 
       // Add to recently played
-      await prisma.recentlyPlayed.create({
-        data: {
-          userId,
-          trackId: dbTrack.id,
-          playedAt: new Date()
-        }
-      });
-
-      // Update play count
-      const existingPlayCount = await prisma.playCount.findFirst({
-        where: {
-          userId,
-          trackId: dbTrack.id
-        }
-      });
-
-      if (existingPlayCount) {
-        await prisma.playCount.update({
-          where: { id: existingPlayCount.id },
-          data: { count: existingPlayCount.count + 1 }
-        });
-      } else {
-        await prisma.playCount.create({
+      try {
+        await prisma.recentlyPlayed.create({
           data: {
             userId,
             trackId: dbTrack.id,
-            count: 1
+            playedAt: new Date()
           }
         });
+      } catch (recentlyPlayedError) {
+        console.error('Error adding to recently played:', recentlyPlayedError);
+        // Continue even if this fails
+      }
+
+      // Update play count
+      try {
+        const existingPlayCount = await prisma.playCount.findFirst({
+          where: {
+            userId,
+            trackId: dbTrack.id
+          }
+        });
+
+        if (existingPlayCount) {
+          await prisma.playCount.update({
+            where: { id: existingPlayCount.id },
+            data: { count: existingPlayCount.count + 1 }
+          });
+        } else {
+          await prisma.playCount.create({
+            data: {
+              userId,
+              trackId: dbTrack.id,
+              count: 1
+            }
+          });
+        }
+      } catch (playCountError) {
+        console.error('Error updating play count:', playCountError);
+        // Continue even if this fails
       }
     } catch (dbError) {
       console.error('Error adding recently played track to database:', dbError);

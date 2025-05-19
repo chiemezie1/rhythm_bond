@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useMusic } from '@/contexts/MusicContext';
 import { Track, Genre } from '@/services/musicDatabase';
+import TrackMenu from './TrackMenu';
 
 // Define a type for our genre recommendations
 interface GenreRecommendation {
@@ -20,6 +21,10 @@ export default function RecommendedSection() {
   const [recommendations, setRecommendations] = useState<GenreRecommendation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showTrackMenu, setShowTrackMenu] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | undefined>(undefined);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
@@ -50,6 +55,22 @@ export default function RecommendedSection() {
       setIsLoading(false);
     }
   }, [genres]);
+
+  // Handle showing the track menu
+  const handleShowTrackMenu = (e: React.MouseEvent, track: Track) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    // Calculate position for the menu - position it to the right of the button
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMenuPosition({
+      x: rect.right,
+      y: rect.top
+    });
+
+    setSelectedTrack(track);
+    setShowTrackMenu(true);
+  };
 
   return (
     <div className="mb-8">
@@ -95,6 +116,19 @@ export default function RecommendedSection() {
                         fill
                         className="object-cover rounded-md"
                       />
+
+                      {/* Always visible three-dot menu at top right */}
+                      {featuredTrack && (
+                        <button
+                          className="absolute top-2 right-2 p-1 rounded-full bg-dark-lighter hover:bg-dark-lightest z-20"
+                          onClick={(e) => featuredTrack && handleShowTrackMenu(e, featuredTrack)}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                          </svg>
+                        </button>
+                      )}
+
                       <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                         <button
                           className="bg-primary rounded-full p-3 transform hover:scale-110 transition-transform"
@@ -124,6 +158,15 @@ export default function RecommendedSection() {
             );
           })}
         </div>
+      )}
+
+      {/* Track Menu */}
+      {showTrackMenu && selectedTrack && (
+        <TrackMenu
+          track={selectedTrack}
+          onClose={() => setShowTrackMenu(false)}
+          position={menuPosition}
+        />
       )}
 
       {/* YouTube Attribution */}

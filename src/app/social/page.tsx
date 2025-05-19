@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Layout from "@/components/layout/Layout";
-import SocialFeed from "@/components/social/SocialFeed";
+import SimplifiedSocialFeed from "@/components/social/SimplifiedSocialFeed";
 import SocialTabs from "@/components/social/SocialTabs";
 import UserProfile from "@/components/user/UserProfile";
 import { useAuth } from '@/hooks/useAuth';
@@ -118,7 +118,7 @@ export default function SocialPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           <div className="lg:col-span-2">
-            <SocialFeed filter={filter} />
+            <SimplifiedSocialFeed filter={filter} />
           </div>
 
           <div className="lg:col-span-1">

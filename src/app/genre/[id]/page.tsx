@@ -1,3 +1,5 @@
+'use client';
+
 import Layout from "@/components/layout/Layout";
 import TrackCard from "@/components/music/TrackCard";
 import { Track } from "@/services/musicService";
@@ -12,22 +14,34 @@ const genres = {
   'blues': { name: 'Blues', color: 'from-amber-500 to-yellow-500' },
 };
 
-'use client';
-
 export default function GenrePage({ params }: { params: { id: string } }) {
-  const genre = genres[params.id as keyof typeof genres] || { name: 'Unknown Genre', color: 'from-gray-500 to-gray-700' };
+  // Store the genre ID in a state variable to avoid the async params warning
+  const [genreId, setGenreId] = useState<string>('');
+  const [genreInfo, setGenreInfo] = useState({ name: 'Loading...', color: 'from-gray-500 to-gray-700' });
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Set the genre ID from params when the component mounts
+  useEffect(() => {
+    if (params && params.id) {
+      setGenreId(params.id);
+      // Set genre info based on the ID
+      setGenreInfo(genres[params.id as keyof typeof genres] || { name: 'Unknown Genre', color: 'from-gray-500 to-gray-700' });
+    }
+  }, [params]);
+
   // Fetch tracks for this genre
   useEffect(() => {
+    // Only fetch if we have a genre ID
+    if (!genreId) return;
+
     const fetchGenreTracks = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        const response = await fetch(`/api/music?genre=${params.id}`);
+        const response = await fetch(`/api/music?genre=${genreId}`);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch tracks: ${response.statusText}`);
@@ -50,15 +64,15 @@ export default function GenrePage({ params }: { params: { id: string } }) {
     };
 
     fetchGenreTracks();
-  }, [params.id]);
+  }, [genreId]);
 
   return (
     <Layout>
       <div className="max-w-6xl mx-auto">
-        <div className={`bg-gradient-to-r ${genre.color} rounded-xl p-8 mb-8`}>
-          <h1 className="text-4xl font-bold text-white">{genre.name}</h1>
+        <div className={`bg-gradient-to-r ${genreInfo.color} rounded-xl p-8 mb-8`}>
+          <h1 className="text-4xl font-bold text-white">{genreInfo.name}</h1>
           <p className="text-white text-opacity-90 mt-2">
-            Explore the best {genre.name} tracks and artists
+            Explore the best {genreInfo.name} tracks and artists
           </p>
         </div>
 

@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useMusic } from '@/contexts/MusicContext';
 import { Track } from '@/services/musicService';
-import TrackMenu from '../common/TrackMenu';
+import TrackMenu from './TrackMenu';
 
 // Define a type for our processed track data
 interface TrackWithLikes extends Track {
@@ -204,10 +204,14 @@ export default function TrendingTracks() {
 
                     {/* Dropdown Menu */}
                     {activeMenu === track.id && (
-                      <div ref={menuRef}>
+                      <div ref={menuRef} className="absolute right-0 top-0 z-50">
                         <TrackMenu
                           track={track}
                           onClose={() => setActiveMenu(null)}
+                          position={{
+                            x: menuRef.current?.getBoundingClientRect().right || 0,
+                            y: menuRef.current?.getBoundingClientRect().top || 0
+                          }}
                         />
                       </div>
                     )}

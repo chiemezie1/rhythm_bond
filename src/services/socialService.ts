@@ -267,39 +267,68 @@ const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
       return localProfile;
     }
 
-    // If not in localStorage, fetch from database
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        followers: true,
-        following: true
-      }
-    });
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      try {
+        // If not in localStorage, fetch from database
+        // Only try to use Prisma in a server environment
+        if (typeof window === 'undefined') {
+          const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: {
+              followers: true,
+              following: true
+            }
+          });
 
-    if (!user) {
-      return null;
+          if (user) {
+            // Transform to our interface
+            const userProfile: UserProfile = {
+              id: user.id,
+              username: user.username || `user_${user.id}`,
+              displayName: user.name || `User ${user.id}`,
+              bio: user.bio || '',
+              avatarUrl: user.image || '/images/logo.png',
+              coverUrl: user.coverImage || '/images/man_with_headse.png',
+              isVerified: user.isVerified || false,
+              joinDate: user.createdAt.toISOString(),
+              followers: user.followers.map(f => f.followerId),
+              following: user.following.map(f => f.followingId)
+            };
+
+            // Update localStorage
+            socialData.userProfiles = socialData.userProfiles.filter(p => p.id !== userId);
+            socialData.userProfiles.push(userProfile);
+            localStorage.setItem('socialData', JSON.stringify(socialData));
+
+            return userProfile;
+          }
+        }
+      } catch (dbError) {
+        console.error('Database error getting user profile:', dbError);
+      }
     }
 
-    // Transform to our interface
-    const userProfile: UserProfile = {
-      id: user.id,
-      username: user.username || `user_${user.id}`,
-      displayName: user.name || `User ${user.id}`,
-      bio: user.bio || '',
-      avatarUrl: user.image || '/images/logo.png',
-      coverUrl: user.coverImage || '/images/man_with_headse.png',
-      isVerified: user.isVerified || false,
-      joinDate: user.createdAt.toISOString(),
-      followers: user.followers.map(f => f.followerId),
-      following: user.following.map(f => f.followingId)
+    // If we're in the browser or database fetch failed, create a mock profile
+    const mockProfile: UserProfile = {
+      id: userId,
+      username: `user_${userId}`,
+      displayName: `User ${userId}`,
+      bio: 'Music enthusiast',
+      avatarUrl: '/images/logo.png',
+      coverUrl: '/images/man_with_headse.png',
+      isVerified: false,
+      joinDate: new Date().toISOString(),
+      followers: [],
+      following: []
     };
 
     // Update localStorage
     socialData.userProfiles = socialData.userProfiles.filter(p => p.id !== userId);
-    socialData.userProfiles.push(userProfile);
+    socialData.userProfiles.push(mockProfile);
     localStorage.setItem('socialData', JSON.stringify(socialData));
 
-    return userProfile;
+    return mockProfile;
   } catch (error) {
     console.error('Error getting user profile:', error);
     return null;

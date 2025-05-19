@@ -1,7 +1,7 @@
 'use client';
 
 import Layout from "@/components/layout/Layout";
-import SocialTabs from "@/components/music/SocialTabs";
+import SocialTabs from "@/components/social/SocialTabs";
 import Image from "next/image";
 
 // Mock data for friends

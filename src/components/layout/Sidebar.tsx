@@ -17,6 +17,7 @@ const libraryItems = [
   { name: "Favorites", icon: "favorite", path: "/favorites" },
   { name: "Your Playlists", icon: "playlist", path: "/playlists" },
   { name: "Custom Tags", icon: "tag", path: "/tags" },
+  { name: "Genres", icon: "album", path: "/genres" },
   { name: "Most Played", icon: "trending", path: "/most-played" },
 ]
 

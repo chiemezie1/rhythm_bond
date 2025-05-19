@@ -5,12 +5,16 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useMusic } from '@/contexts/MusicContext';
 import { Track } from '@/services/musicDatabase';
+import TrackMenu from './TrackMenu';
 
 export default function FavoriteTracks() {
   const { getFavorites, toggleFavorite, playTrack } = useMusic();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showTrackMenu, setShowTrackMenu] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | undefined>(undefined);
 
   // Get favorite tracks
   useEffect(() => {
@@ -30,6 +34,22 @@ export default function FavoriteTracks() {
     event.stopPropagation(); // Prevent triggering the row click (play)
     toggleFavorite(track);
     setTracks(prevTracks => prevTracks.filter(t => t.id !== track.id));
+  };
+
+  // Handle showing the track menu
+  const handleShowTrackMenu = (e: React.MouseEvent, track: Track) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    // Calculate position for the menu - position it to the right of the button
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMenuPosition({
+      x: rect.right,
+      y: rect.top
+    });
+
+    setSelectedTrack(track);
+    setShowTrackMenu(true);
   };
 
   if (isLoading) {
@@ -94,8 +114,8 @@ export default function FavoriteTracks() {
               </thead>
               <tbody>
                 {tracks.slice(0, 5).map((track, index) => (
-                  <tr 
-                    key={track.id} 
+                  <tr
+                    key={track.id}
                     className="border-b border-dark-lightest hover:bg-dark-lightest/50 cursor-pointer"
                     onClick={() => playTrack(track)}
                   >
@@ -118,15 +138,28 @@ export default function FavoriteTracks() {
                     </td>
                     <td className="py-3 px-4 text-gray-400 hidden md:table-cell">{track.artist}</td>
                     <td className="py-3 px-4 text-right">
-                      <button 
-                        className="icon-btn text-red-500 hover:text-red-400"
-                        onClick={(e) => handleRemoveFavorite(track, e)}
-                        title="Remove from favorites"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                        </svg>
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          className="icon-btn text-red-500 hover:text-red-400"
+                          onClick={(e) => handleRemoveFavorite(track, e)}
+                          title="Remove from favorites"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+
+                        {/* Three-dot menu button */}
+                        <button
+                          className="icon-btn text-gray-400 hover:text-white"
+                          onClick={(e) => handleShowTrackMenu(e, track)}
+                          title="More options"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                          </svg>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -134,6 +167,15 @@ export default function FavoriteTracks() {
             </table>
           </div>
         </div>
+      )}
+
+      {/* Track Menu */}
+      {showTrackMenu && selectedTrack && (
+        <TrackMenu
+          track={selectedTrack}
+          onClose={() => setShowTrackMenu(false)}
+          position={menuPosition}
+        />
       )}
     </div>
   );

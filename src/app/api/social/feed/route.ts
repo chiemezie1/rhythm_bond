@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
           id: '1',
           name: 'John Doe',
           username: 'johndoe',
-          image: 'https://randomuser.me/api/portraits/men/1.jpg'
+          image: '/images/logo.png'
         },
         likes: [{ userId: '2' }, { userId: '3' }],
         comments: [
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
               id: '2',
               name: 'Jane Smith',
               username: 'janesmith',
-              image: 'https://randomuser.me/api/portraits/women/2.jpg'
+              image: '/images/logo_bg_white.png'
             },
             likes: []
           }
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
           id: '3',
           name: 'Alex Johnson',
           username: 'alexj',
-          image: 'https://randomuser.me/api/portraits/men/3.jpg'
+          image: '/images/man_with_headse.png'
         },
         likes: [{ userId: '1' }],
         comments: [],
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
           id: '4',
           name: 'Sarah Williams',
           username: 'sarahw',
-          image: 'https://randomuser.me/api/portraits/women/4.jpg'
+          image: '/images/two_people_enjoying_music.png'
         },
         likes: [{ userId: '1' }, { userId: '2' }, { userId: '3' }],
         comments: [
@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
               id: '1',
               name: 'John Doe',
               username: 'johndoe',
-              image: 'https://randomuser.me/api/portraits/men/1.jpg'
+              image: '/images/logo.png'
             },
             likes: [{ userId: '4' }]
           }

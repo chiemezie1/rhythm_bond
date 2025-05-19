@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { UserPlaylist } from '@/services/userDataService';
 import PlaylistComments from '@/components/social/PlaylistComments';
 import SharePlaylist from '@/components/social/SharePlaylist';
-import socialService from '@/services/socialService';
+import TrackMenu from '@/components/music/TrackMenu';
 
 export default function PlaylistPage({ params }: { params: { id: string } }) {
   const { getPlaylistById, playTrack, addTrackToPlaylist, getPlaylists } = useMusic();
@@ -21,6 +21,9 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
   const [showAddToPlaylistMenu, setShowAddToPlaylistMenu] = useState(false);
   const [userPlaylists, setUserPlaylists] = useState<UserPlaylist[]>([]);
   const [isOwner, setIsOwner] = useState(false);
+  const [showTrackMenu, setShowTrackMenu] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState<any>(null);
+  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | undefined>(undefined);
 
   // Fetch playlist data
   useEffect(() => {
@@ -87,6 +90,21 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  // Handle showing the track menu
+  const handleShowTrackMenu = (e: React.MouseEvent, track: any) => {
+    e.stopPropagation();
+
+    // Calculate position for the menu
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMenuPosition({
+      x: rect.left,
+      y: rect.bottom + window.scrollY
+    });
+
+    setSelectedTrack(track);
+    setShowTrackMenu(true);
   };
 
   if (isLoading) {
@@ -287,6 +305,14 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
                               </svg>
                             </button>
                           )}
+                          <button
+                            className="icon-btn text-text-secondary hover:text-white"
+                            onClick={(e) => handleShowTrackMenu(e, track)}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                            </svg>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -308,6 +334,15 @@ export default function PlaylistPage({ params }: { params: { id: string } }) {
             playlist={playlist}
             onClose={() => setShowShareModal(false)}
             onShare={handleSharePlaylist}
+          />
+        )}
+
+        {/* Track Menu */}
+        {showTrackMenu && selectedTrack && (
+          <TrackMenu
+            track={selectedTrack}
+            onClose={() => setShowTrackMenu(false)}
+            position={menuPosition}
           />
         )}
 

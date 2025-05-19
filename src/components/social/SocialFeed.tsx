@@ -119,13 +119,25 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
 
   // Fetch social feed posts
   useEffect(() => {
-    const fetchSocialFeed = async () => {
-      try {
-        setIsLoading(true);
+    // Create a flag to track if the component is mounted
+    let isMounted = true;
 
+    const fetchSocialFeed = async () => {
+      // Only proceed if the component is still mounted
+      if (!isMounted) return;
+
+      // Only set loading state on initial load
+      if (socialPosts.length === 0) {
+        setIsLoading(true);
+      }
+
+      try {
         if (isAuthenticated && user) {
           // Get social feed from API
           const response = await fetch(`/api/social/feed?filter=${filter}${userId ? `&userId=${userId}` : ''}`);
+
+          // Only proceed if the component is still mounted
+          if (!isMounted) return;
 
           if (!response.ok) {
             throw new Error('Failed to fetch social feed');
@@ -135,16 +147,27 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
           setSocialPosts(data.posts);
         }
 
-        setIsLoading(false);
+        // Only proceed if the component is still mounted
+        if (isMounted) {
+          setIsLoading(false);
+        }
       } catch (err) {
-        console.error('Failed to load social feed:', err);
-        setError('Failed to load social feed. Please try again later.');
-        setIsLoading(false);
+        // Only proceed if the component is still mounted
+        if (isMounted) {
+          console.error('Failed to load social feed:', err);
+          setError('Failed to load social feed. Please try again later.');
+          setIsLoading(false);
+        }
       }
     };
 
     fetchSocialFeed();
-  }, [isAuthenticated, user, filter, userId]);
+
+    // Cleanup function to set the flag to false when the component unmounts
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, user, filter, userId, socialPosts.length]);
 
   // Function to add a new post
   const addPost = async () => {
@@ -186,6 +209,7 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
   const likePost = async (id: string) => {
     if (!isAuthenticated) {
       alert('Please log in to like posts');
+      window.location.href = '/login';
       return;
     }
 
@@ -218,6 +242,7 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
   const commentPost = async (id: string, commentText: string) => {
     if (!isAuthenticated) {
       alert('Please log in to comment on posts');
+      window.location.href = '/login';
       return;
     }
 
@@ -251,6 +276,7 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
   const sharePost = async (id: string) => {
     if (!isAuthenticated) {
       alert('Please log in to share posts');
+      window.location.href = '/login';
       return;
     }
 
@@ -376,7 +402,9 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
       ) : (
         <div className="bg-background-elevated rounded-lg p-4 mb-6 text-center">
           <p className="text-text-secondary mb-2">Sign in to share your thoughts</p>
-          <button className="btn btn-primary">Sign In</button>
+          <Link href="/login">
+            <button className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md">Sign In</button>
+          </Link>
         </div>
       )}
 

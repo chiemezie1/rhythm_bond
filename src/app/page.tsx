@@ -8,6 +8,7 @@ import RecentlyPlayed from "@/components/music/RecentlyPlayed";
 import RecommendedSection from "@/components/music/RecommendedSection";
 import TrendingTracks from "@/components/music/TrendingTracks";
 import SocialFeed from "@/components/social/SocialFeed";
+import SimplifiedSocialFeed from "@/components/social/SimplifiedSocialFeed";
 import SocialTabs from "@/components/social/SocialTabs";
 import WelcomePage from "@/components/user/WelcomePage";
 import FavoriteTracks from "@/components/music/FavoriteTracks";
@@ -122,7 +123,7 @@ export default function Home() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         <div className="lg:col-span-2">
-          <SocialFeed filter="all" />
+          <SimplifiedSocialFeed filter="all" />
         </div>
 
         <div className="lg:col-span-1">

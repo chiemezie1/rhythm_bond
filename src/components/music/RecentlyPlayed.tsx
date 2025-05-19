@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useMusic } from '@/contexts/MusicContext';
 import { Track } from '@/services/musicDatabase';
-import userDataService from '@/services/userDataService';
+import TrackMenu from './TrackMenu';
 
 // Define a type for our processed track data
 interface RecentTrack extends Track {
@@ -17,6 +17,9 @@ export default function RecentlyPlayed() {
   const [tracks, setTracks] = useState<RecentTrack[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showTrackMenu, setShowTrackMenu] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | undefined>(undefined);
 
   // Get recently played tracks from the Music Context
   useEffect(() => {
@@ -75,6 +78,22 @@ export default function RecentlyPlayed() {
     loadRecentlyPlayed();
   }, [getUserRecentlyPlayed]);
 
+  // Handle showing the track menu
+  const handleShowTrackMenu = (e: React.MouseEvent, track: Track) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    // Calculate position for the menu
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMenuPosition({
+      x: rect.left,
+      y: rect.bottom + window.scrollY
+    });
+
+    setSelectedTrack(track);
+    setShowTrackMenu(true);
+  };
+
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
@@ -101,7 +120,7 @@ export default function RecentlyPlayed() {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {tracks.map((track) => (
-            <div key={track.id} className="bg-dark-lighter dark:bg-dark-lighter rounded-lg p-3 hover:bg-dark-lightest transition-colors cursor-pointer">
+            <div key={track.id} className="relative bg-dark-lighter dark:bg-dark-lighter rounded-lg p-3 hover:bg-dark-lightest transition-colors cursor-pointer group">
               <div className="relative aspect-square rounded-md overflow-hidden mb-3 group">
                 <Image
                   src={track.thumbnail}
@@ -132,9 +151,28 @@ export default function RecentlyPlayed() {
                 {track.artist}
               </span>
               <p className="text-xs text-gray-500 mt-1">{track.playedAt}</p>
+
+              {/* Three-dot menu button - always visible at top right */}
+              <button
+                className="absolute top-2 right-2 p-1 rounded-full bg-dark-lighter hover:bg-dark-lightest z-20"
+                onClick={(e) => handleShowTrackMenu(e, track)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+              </button>
             </div>
           ))}
         </div>
+      )}
+
+      {/* Track Menu */}
+      {showTrackMenu && selectedTrack && (
+        <TrackMenu
+          track={selectedTrack}
+          onClose={() => setShowTrackMenu(false)}
+          position={menuPosition}
+        />
       )}
 
       {/* YouTube Attribution */}
