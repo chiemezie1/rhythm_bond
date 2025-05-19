@@ -16,18 +16,18 @@ RhythmBond is a modern web-based music player that enhances the music listening 
 
 #### Core Features
 RhythmBond offers a range of features to enhance the music listening experience:
-- Sleek, responsive music player with visualizations
-- Integration with music streaming APIs for vast content access
-- Comprehensive metadata management and tagging system
-- Advanced search and discovery tools
-- Personalized playlists and listening history
+- Sleek, responsive music player with YouTube integration
+- Comprehensive music library organized by genres
+- Advanced search with filters for artist, genre, and duration
+- Personalized playlists and listening history tracking
+- Custom tagging system for organizing your music
 
 #### Advanced Features
-- AI-powered music recommendations based on listening habits
-- Social sharing of playlists with comments and likes
-- Collaborative playlist creation (Premium)
-- Interactive metadata explorer for music discovery
-- Detailed listening statistics and insights
+- Social feed for sharing music and connecting with others
+- User profiles with activity feeds and music preferences
+- Playlist sharing and commenting functionality
+- Like and comment on social posts
+- Recently played and most played tracks tracking
 
 ## 🚀 Technical Stack
 
@@ -55,22 +55,28 @@ RhythmBond offers a range of features to enhance the music listening experience:
 ## 📂 Project Structure
 
 - `src/app`: Next.js app directory with pages and API routes
+  - `api`: Backend API endpoints organized by functionality
+  - `auth`: Authentication-related pages (login, register)
+  - `explore`: Music exploration pages
+  - `library`: User library pages
+  - `playlist`: Playlist-related pages
+  - `search`: Search functionality
+  - `social`: Social features pages
+  - `user`: User profile pages
 - `src/components`: React components organized by functionality
-  - `common`: Common components used throughout the application
+  - `common`: Common components like LoadingSpinner, SearchBar
   - `layout`: Layout components (header, footer, sidebar)
   - `music`: Music-related components (tracks, playlists, etc.)
-  - `player`: Music player components
-  - `social`: Social features components
-  - `user`: User-related components (profile, settings, etc.)
-- `src/contexts`: React context providers
-- `src/hooks`: Custom React hooks
-- `src/lib`: Utility libraries
-- `src/providers`: Provider components
+  - `player`: Music player components (MiniPlayer, YouTubePlayer)
+  - `social`: Social features components (SocialFeed, CreatePost, etc.)
+  - `user`: User-related components (UserProfile, ProfileSettings, etc.)
+- `src/contexts`: React context providers (MusicContext, AuthContext)
+- `src/hooks`: Custom React hooks (useAuth, useMusic)
+- `src/lib`: Utility libraries (prisma client, authentication)
 - `src/services`: Service modules for data fetching and manipulation
-- `src/styles`: Global styles
-- `src/types`: TypeScript type definitions
+- `src/utils`: Utility functions (imageUtils, formatters)
 - `prisma`: Prisma ORM schema and migrations
-- `public`: Static assets
+- `public`: Static assets (images, icons, etc.)
 
 ## 👥 User Roles
 
@@ -144,13 +150,25 @@ npm run dev
 ## 📝 Database Schema
 
 The database includes tables for:
-- Users (with roles and preferences)
-- Tracks (YouTube tracks with metadata)
-- Playlists and PlaylistTracks
-- Custom Tags and TrackTags
-- Social connections (follows, likes, comments)
-- Posts and shared content
-- User preferences and listening history
+- **User**: User accounts with authentication details
+- **Account**: OAuth accounts linked to users
+- **Session**: User sessions for authentication
+- **Track**: YouTube tracks with metadata (title, artist, genre, etc.)
+- **Playlist**: User-created playlists
+- **PlaylistTrack**: Junction table for tracks in playlists
+- **Favorite**: User's favorite tracks
+- **RecentlyPlayed**: User's recently played tracks
+- **PlayCount**: Track play count for users
+- **Tag**: User-created tags for organizing tracks
+- **TagTrack**: Junction table for tracks with tags
+- **Follow**: Social connections between users
+- **Post**: Social posts shared by users
+- **Comment**: Comments on posts
+- **Like**: Likes on posts
+- **CommentLike**: Likes on comments
+- **Genre**: User-created genres for organizing tracks
+- **GenreTrack**: Junction table for tracks in genres
+- **HomeLayout**: User's home page layout preferences
 
 ## 🧪 Testing
 
@@ -166,19 +184,25 @@ For testing the application:
 RhythmBond uses YouTube as its exclusive music source:
 
 ### YouTube Integration
-- Documentation: [YouTube Embedded Player](https://developers.google.com/youtube/iframe_api_reference)
-- Vast catalog of music content
-- Embedded player for seamless integration
-- Organized by genres:
+- **Player**: YouTube Embedded Player for seamless music playback
+- **Music Library**: Organized collection of YouTube tracks with metadata
+- **Search**: Advanced search functionality with filters for artist, genre, and duration
+- **Genres**: Music organized into various genres:
   - Afrobeats & Global Pop
   - Pop
   - Hip-Hop & Trap
   - R&B
   - Blues
-- Custom metadata and tagging system
-- User-created playlists and favorites
-- Recently played tracking
-- No API key required for basic embedded playback
+- **Features**:
+  - Custom tagging system for personal organization
+  - User-created playlists with drag-and-drop reordering
+  - Favorites for quick access to loved tracks
+  - Recently played and most played tracking
+  - Social sharing of tracks and playlists
+- **Technical Details**:
+  - YouTube IFrame API for player control
+  - Thumbnail handling with fallback images
+  - No API key required for basic embedded playback
 
 ## 📚 Learn More
 
@@ -196,14 +220,14 @@ See the [API documentation](src/app/api/README.md) for details on available endp
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-
-
+## 👤 Test User Accounts
 
 Here are the user accounts that can be used to log in:
 
-Name	Email	Password
-John Doe	john@example.com	password123
-Jane Smith	jane@example.com	password123
-Alex Johnson	alex@example.com	password123
-Maria Garcia	maria@example.com	password123
-David Kim	david@example.com	password123
+| Name | Email | Password |
+|------|-------|----------|
+| John Doe | john@example.com | password123 |
+| Jane Smith | jane@example.com | password123 |
+| Alex Johnson | alex@example.com | password123 |
+| Maria Garcia | maria@example.com | password123 |
+| David Kim | david@example.com | password123 |

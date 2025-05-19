@@ -75,20 +75,23 @@ This directory contains all the API endpoints for the RhythmBond application.
 - `GET /api/social/feed` - Get social feed
   - Query parameters:
     - `filter` - Filter type (all, following, trending)
+    - `userId` - Optional user ID to filter posts by a specific user
 
-### Comments
+### Posts
 
-- `GET /api/social/comments` - Get comments for a post
-- `POST /api/social/comments` - Add a comment to a post
-- `DELETE /api/social/comments` - Delete a comment
+- `GET /api/social/posts` - Get all posts or posts by a specific user
+- `POST /api/social/posts` - Create a new post
+  - Body parameters:
+    - `content` - Post content
+    - `mediaType` - Optional media type (track, playlist, etc.)
+    - `mediaId` - Optional media ID
+    - `visibility` - Post visibility (public, followers, private)
 
-### Likes
+### Post-specific Actions
 
-- `POST /api/social/likes` - Like/unlike a post or comment
-
-### Share
-
-- `POST /api/social/share` - Share a track or playlist
+- `POST /api/social/posts/[id]/like` - Like/unlike a specific post
+- `GET /api/social/posts/[id]/comments` - Get comments for a specific post
+- `POST /api/social/posts/[id]/comments` - Add a comment to a specific post
 
 ## Utilities
 

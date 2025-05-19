@@ -13,9 +13,9 @@ This directory contains all the React components for the RhythmBond application,
 
 ## Common Components
 
-- `LoadingSpinner.tsx` - Loading spinner component
+- `LoadingSpinner.tsx` - Loading spinner component for asynchronous operations
 - `ProtectedRoute.tsx` - Route protection for authenticated users
-- `SearchBar.tsx` - Search bar component
+- `SearchBar.tsx` - Basic search bar component for quick searches
 
 ## Layout Components
 
@@ -49,11 +49,14 @@ This directory contains all the React components for the RhythmBond application,
 
 ## Social Components
 
-- `PlaylistComments.tsx` - Playlist comments component
-- `SharePlaylist.tsx` - Share playlist component
-- `SharedPlaylist.tsx` - Shared playlist component
-- `SocialFeed.tsx` - Social feed component
-- `SocialTabs.tsx` - Social tabs component
+- `CreatePost.tsx` - Component for creating new social posts
+- `PlaylistComments.tsx` - Component for displaying and adding comments to playlists
+- `SharePlaylist.tsx` - Modal component for sharing playlists with others
+- `SharedPlaylist.tsx` - Component for displaying shared playlists in the feed
+- `SimplifiedSocialFeed.tsx` - Modern social feed with CreatePost and SocialPost components
+- `SocialFeed.tsx` - Social feed component used in user profiles
+- `SocialPost.tsx` - Reusable component for displaying individual social posts
+- `SocialTabs.tsx` - Navigation tabs for the social section
 
 ## User Components
 
