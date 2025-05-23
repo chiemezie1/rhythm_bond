@@ -12,8 +12,6 @@
  */
 
 import { UserPlaylist } from './userDataService';
-import { Track } from './musicDatabase';
-import { prisma } from '@/lib/prisma';
 
 // Define types for social data
 export interface UserProfile {
@@ -85,7 +83,7 @@ const defaultSocialData: SocialData = {
 const isClient = typeof window !== 'undefined';
 
 /**
- * Load social data from localStorage and merge with database data
+ * Load social data from localStorage
  */
 const loadSocialData = async (): Promise<SocialData> => {
   // If not on client, return default data
@@ -94,121 +92,9 @@ const loadSocialData = async (): Promise<SocialData> => {
   }
 
   try {
-    // First try to get from localStorage for quick access
+    // Get from localStorage for quick access
     const localData = localStorage.getItem('socialData');
-    let socialData = localData ? JSON.parse(localData) : defaultSocialData;
-
-    try {
-      // Get user profiles
-      const userProfiles = await prisma.user.findMany({
-        include: {
-          followers: true,
-          following: true
-        }
-      });
-
-      // Get posts
-      const posts = await prisma.post.findMany({
-        include: {
-          likes: true,
-          comments: {
-            include: {
-              likes: true,
-              replies: {
-                include: {
-                  likes: true
-                }
-              }
-            }
-          }
-        }
-      });
-
-      // Get playlist comments
-      const playlistComments = await prisma.playlistComment.findMany({
-        include: {
-          likes: true,
-          replies: {
-            include: {
-              likes: true
-            }
-          }
-        }
-      });
-
-      // Get shared playlists
-      const sharedPlaylists = await prisma.sharedPlaylist.findMany();
-
-      // Transform data to match our interface
-      socialData = {
-        userProfiles: userProfiles.map(user => ({
-          id: user.id,
-          username: user.username || `user_${user.id}`,
-          displayName: user.name || `User ${user.id}`,
-          bio: user.bio || '',
-          avatarUrl: user.image || '/images/logo.png',
-          coverUrl: user.coverImage || '/images/man_with_headse.png',
-          isVerified: user.isVerified || false,
-          joinDate: user.createdAt.toISOString(),
-          followers: user.followers.map(f => f.followerId),
-          following: user.following.map(f => f.followingId)
-        })),
-        posts: posts.map(post => ({
-          id: post.id,
-          userId: post.userId,
-          type: post.type as any,
-          content: post.content,
-          timestamp: post.createdAt.getTime(),
-          mediaId: post.mediaId || undefined,
-          mediaType: post.mediaType || undefined,
-          visibility: post.visibility as any,
-          likes: post.likes.map(like => like.userId),
-          comments: post.comments.map(comment => ({
-            id: comment.id,
-            userId: comment.userId,
-            content: comment.content,
-            timestamp: comment.createdAt.getTime(),
-            likes: comment.likes.map(like => like.userId),
-            replies: comment.replies.map(reply => ({
-              id: reply.id,
-              userId: reply.userId,
-              content: reply.content,
-              timestamp: reply.createdAt.getTime(),
-              likes: reply.likes.map(like => like.userId)
-            }))
-          })),
-          shares: post.shareCount
-        })),
-        playlistComments: playlistComments.map(comment => ({
-          id: comment.id,
-          playlistId: comment.playlistId,
-          userId: comment.userId,
-          content: comment.content,
-          timestamp: comment.createdAt.getTime(),
-          likes: comment.likes.map(like => like.userId),
-          replies: comment.replies.map(reply => ({
-            id: reply.id,
-            playlistId: reply.playlistId,
-            userId: reply.userId,
-            content: reply.content,
-            timestamp: reply.createdAt.getTime(),
-            likes: reply.likes.map(like => like.userId)
-          }))
-        })),
-        sharedPlaylists: sharedPlaylists.map(sp => ({
-          playlistId: sp.playlistId,
-          userId: sp.userId,
-          timestamp: sp.sharedAt.getTime()
-        }))
-      };
-
-      // Update localStorage with the merged data
-      localStorage.setItem('socialData', JSON.stringify(socialData));
-    } catch (dbError) {
-      console.error('Error fetching social data from database:', dbError);
-      // If database fetch fails, use localStorage data
-    }
-
+    const socialData = localData ? JSON.parse(localData) : defaultSocialData;
     return socialData;
   } catch (error) {
     console.error('Error loading social data:', error);
@@ -259,7 +145,7 @@ const saveSocialData = async (socialData: SocialData): Promise<void> => {
  */
 const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
   try {
-    // First check localStorage for quick access
+    // Check localStorage for quick access
     const socialData = loadSocialDataSync();
     const localProfile = socialData.userProfiles.find(profile => profile.id === userId);
 
@@ -267,49 +153,7 @@ const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
       return localProfile;
     }
 
-    // Check if we're in a browser environment
-    if (typeof window !== 'undefined') {
-      try {
-        // If not in localStorage, fetch from database
-        // Only try to use Prisma in a server environment
-        if (typeof window === 'undefined') {
-          const user = await prisma.user.findUnique({
-            where: { id: userId },
-            include: {
-              followers: true,
-              following: true
-            }
-          });
-
-          if (user) {
-            // Transform to our interface
-            const userProfile: UserProfile = {
-              id: user.id,
-              username: user.username || `user_${user.id}`,
-              displayName: user.name || `User ${user.id}`,
-              bio: user.bio || '',
-              avatarUrl: user.image || '/images/logo.png',
-              coverUrl: user.coverImage || '/images/man_with_headse.png',
-              isVerified: user.isVerified || false,
-              joinDate: user.createdAt.toISOString(),
-              followers: user.followers.map(f => f.followerId),
-              following: user.following.map(f => f.followingId)
-            };
-
-            // Update localStorage
-            socialData.userProfiles = socialData.userProfiles.filter(p => p.id !== userId);
-            socialData.userProfiles.push(userProfile);
-            localStorage.setItem('socialData', JSON.stringify(socialData));
-
-            return userProfile;
-          }
-        }
-      } catch (dbError) {
-        console.error('Database error getting user profile:', dbError);
-      }
-    }
-
-    // If we're in the browser or database fetch failed, create a mock profile
+    // If not found, create a mock profile
     const mockProfile: UserProfile = {
       id: userId,
       username: `user_${userId}`,
@@ -326,7 +170,9 @@ const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
     // Update localStorage
     socialData.userProfiles = socialData.userProfiles.filter(p => p.id !== userId);
     socialData.userProfiles.push(mockProfile);
-    localStorage.setItem('socialData', JSON.stringify(socialData));
+    if (isClient) {
+      localStorage.setItem('socialData', JSON.stringify(socialData));
+    }
 
     return mockProfile;
   } catch (error) {
@@ -346,76 +192,7 @@ const getUserProfileSync = (userId: string): UserProfile | null => {
  */
 const updateUserProfile = async (profile: Partial<UserProfile> & { id: string }): Promise<UserProfile> => {
   try {
-    // First, check if the user exists in the database
-    let user = await prisma.user.findUnique({
-      where: { id: profile.id },
-      include: {
-        followers: true,
-        following: true
-      }
-    });
-
-    if (user) {
-      // Update existing user
-      user = await prisma.user.update({
-        where: { id: profile.id },
-        data: {
-          username: profile.username,
-          name: profile.displayName,
-          bio: profile.bio,
-          image: profile.avatarUrl,
-          coverImage: profile.coverUrl,
-          isVerified: profile.isVerified
-        },
-        include: {
-          followers: true,
-          following: true
-        }
-      });
-    } else {
-      // Create new user
-      user = await prisma.user.create({
-        data: {
-          id: profile.id,
-          username: profile.username || `user_${profile.id}`,
-          name: profile.displayName || `User ${profile.id}`,
-          bio: profile.bio || '',
-          image: profile.avatarUrl || '/images/logo.png',
-          coverImage: profile.coverUrl || '/images/man_with_headse.png',
-          isVerified: profile.isVerified || false
-        },
-        include: {
-          followers: true,
-          following: true
-        }
-      });
-    }
-
-    // Transform to our interface
-    const userProfile: UserProfile = {
-      id: user.id,
-      username: user.username || `user_${user.id}`,
-      displayName: user.name || `User ${user.id}`,
-      bio: user.bio || '',
-      avatarUrl: user.image || '/images/logo.png',
-      coverUrl: user.coverImage || '/images/man_with_headse.png',
-      isVerified: user.isVerified || false,
-      joinDate: user.createdAt.toISOString(),
-      followers: user.followers.map(f => f.followerId),
-      following: user.following.map(f => f.followingId)
-    };
-
-    // Update localStorage
-    const socialData = loadSocialDataSync();
-    socialData.userProfiles = socialData.userProfiles.filter(p => p.id !== profile.id);
-    socialData.userProfiles.push(userProfile);
-    localStorage.setItem('socialData', JSON.stringify(socialData));
-
-    return userProfile;
-  } catch (error) {
-    console.error('Error updating user profile:', error);
-
-    // Fall back to localStorage only
+    // Use localStorage only
     const socialData = loadSocialDataSync();
     const existingProfileIndex = socialData.userProfiles.findIndex(p => p.id === profile.id);
 
@@ -426,7 +203,9 @@ const updateUserProfile = async (profile: Partial<UserProfile> & { id: string })
         ...profile
       };
       socialData.userProfiles[existingProfileIndex] = updatedProfile;
-      localStorage.setItem('socialData', JSON.stringify(socialData));
+      if (isClient) {
+        localStorage.setItem('socialData', JSON.stringify(socialData));
+      }
       return updatedProfile;
     } else {
       // Create new profile
@@ -444,9 +223,14 @@ const updateUserProfile = async (profile: Partial<UserProfile> & { id: string })
       };
 
       socialData.userProfiles.push(newProfile);
-      localStorage.setItem('socialData', JSON.stringify(socialData));
+      if (isClient) {
+        localStorage.setItem('socialData', JSON.stringify(socialData));
+      }
       return newProfile;
     }
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
   }
 };
 
@@ -455,32 +239,15 @@ const updateUserProfile = async (profile: Partial<UserProfile> & { id: string })
  */
 const followUser = async (currentUserId: string, targetUserId: string): Promise<boolean> => {
   try {
-    // Check if already following in the database
-    const existingFollow = await prisma.follows.findUnique({
-      where: {
-        followerId_followingId: {
-          followerId: currentUserId,
-          followingId: targetUserId
-        }
-      }
-    });
-
-    if (existingFollow) {
-      return false;
-    }
-
-    // Create follow relationship in database
-    await prisma.follows.create({
-      data: {
-        followerId: currentUserId,
-        followingId: targetUserId
-      }
-    });
-
     // Update localStorage for quick access
     const socialData = loadSocialDataSync();
     const currentUserIndex = socialData.userProfiles.findIndex(p => p.id === currentUserId);
     const targetUserIndex = socialData.userProfiles.findIndex(p => p.id === targetUserId);
+
+    // Check if already following
+    if (currentUserIndex !== -1 && socialData.userProfiles[currentUserIndex].following.includes(targetUserId)) {
+      return false;
+    }
 
     if (currentUserIndex !== -1) {
       if (!socialData.userProfiles[currentUserIndex].following.includes(targetUserId)) {
@@ -494,7 +261,9 @@ const followUser = async (currentUserId: string, targetUserId: string): Promise<
       }
     }
 
-    localStorage.setItem('socialData', JSON.stringify(socialData));
+    if (isClient) {
+      localStorage.setItem('socialData', JSON.stringify(socialData));
+    }
     return true;
   } catch (error) {
     console.error('Error following user:', error);
@@ -529,51 +298,7 @@ const followUser = async (currentUserId: string, targetUserId: string): Promise<
  */
 const unfollowUser = async (currentUserId: string, targetUserId: string): Promise<boolean> => {
   try {
-    // Check if following in the database
-    const existingFollow = await prisma.follows.findUnique({
-      where: {
-        followerId_followingId: {
-          followerId: currentUserId,
-          followingId: targetUserId
-        }
-      }
-    });
-
-    if (!existingFollow) {
-      return false;
-    }
-
-    // Delete follow relationship from database
-    await prisma.follows.delete({
-      where: {
-        followerId_followingId: {
-          followerId: currentUserId,
-          followingId: targetUserId
-        }
-      }
-    });
-
-    // Update localStorage for quick access
-    const socialData = loadSocialDataSync();
-    const currentUserIndex = socialData.userProfiles.findIndex(p => p.id === currentUserId);
-    const targetUserIndex = socialData.userProfiles.findIndex(p => p.id === targetUserId);
-
-    if (currentUserIndex !== -1) {
-      socialData.userProfiles[currentUserIndex].following =
-        socialData.userProfiles[currentUserIndex].following.filter(id => id !== targetUserId);
-    }
-
-    if (targetUserIndex !== -1) {
-      socialData.userProfiles[targetUserIndex].followers =
-        socialData.userProfiles[targetUserIndex].followers.filter(id => id !== currentUserId);
-    }
-
-    localStorage.setItem('socialData', JSON.stringify(socialData));
-    return true;
-  } catch (error) {
-    console.error('Error unfollowing user:', error);
-
-    // Fall back to localStorage only
+    // Use localStorage only
     const socialData = loadSocialDataSync();
     const currentUserIndex = socialData.userProfiles.findIndex(p => p.id === currentUserId);
     const targetUserIndex = socialData.userProfiles.findIndex(p => p.id === targetUserId);
@@ -595,8 +320,13 @@ const unfollowUser = async (currentUserId: string, targetUserId: string): Promis
     socialData.userProfiles[targetUserIndex].followers =
       socialData.userProfiles[targetUserIndex].followers.filter(id => id !== currentUserId);
 
-    localStorage.setItem('socialData', JSON.stringify(socialData));
+    if (isClient) {
+      localStorage.setItem('socialData', JSON.stringify(socialData));
+    }
     return true;
+  } catch (error) {
+    console.error('Error unfollowing user:', error);
+    return false;
   }
 };
 
@@ -605,21 +335,7 @@ const unfollowUser = async (currentUserId: string, targetUserId: string): Promis
  */
 const isFollowing = async (currentUserId: string, targetUserId: string): Promise<boolean> => {
   try {
-    // Check in database
-    const existingFollow = await prisma.follows.findUnique({
-      where: {
-        followerId_followingId: {
-          followerId: currentUserId,
-          followingId: targetUserId
-        }
-      }
-    });
-
-    return !!existingFollow;
-  } catch (error) {
-    console.error('Error checking if user is following:', error);
-
-    // Fall back to localStorage
+    // Use localStorage
     const socialData = loadSocialDataSync();
     const currentUserProfile = socialData.userProfiles.find(p => p.id === currentUserId);
 
@@ -628,6 +344,9 @@ const isFollowing = async (currentUserId: string, targetUserId: string): Promise
     }
 
     return currentUserProfile.following.includes(targetUserId);
+  } catch (error) {
+    console.error('Error checking if user is following:', error);
+    return false;
   }
 };
 
@@ -653,62 +372,7 @@ const sharePlaylist = async (
   visibility: 'public' | 'followers' | 'private'
 ): Promise<SocialPost> => {
   try {
-    // Create a new post in the database
-    const dbPost = await prisma.post.create({
-      data: {
-        userId,
-        type: 'playlist',
-        content: message,
-        mediaId: playlist.id,
-        mediaType: 'playlist',
-        visibility,
-        shareCount: 0
-      }
-    });
-
-    // Create shared playlist record
-    await prisma.sharedPlaylist.create({
-      data: {
-        playlistId: playlist.id,
-        userId,
-        sharedAt: new Date()
-      }
-    });
-
-    // Transform to our interface
-    const newPost: SocialPost = {
-      id: dbPost.id,
-      userId,
-      type: 'playlist',
-      content: message,
-      timestamp: dbPost.createdAt.getTime(),
-      mediaId: playlist.id,
-      mediaType: 'playlist',
-      visibility: visibility as any,
-      likes: [],
-      comments: [],
-      shares: 0
-    };
-
-    // Update localStorage for quick access
-    const socialData = loadSocialDataSync();
-
-    // Add to shared playlists
-    socialData.sharedPlaylists.push({
-      playlistId: playlist.id,
-      userId,
-      timestamp: Date.now()
-    });
-
-    // Add to posts
-    socialData.posts.push(newPost);
-    localStorage.setItem('socialData', JSON.stringify(socialData));
-
-    return newPost;
-  } catch (error) {
-    console.error('Error sharing playlist:', error);
-
-    // Fall back to localStorage only
+    // Use localStorage only
     const socialData = loadSocialDataSync();
 
     // Create a new post
@@ -735,9 +399,14 @@ const sharePlaylist = async (
 
     // Add to posts
     socialData.posts.push(newPost);
-    localStorage.setItem('socialData', JSON.stringify(socialData));
+    if (isClient) {
+      localStorage.setItem('socialData', JSON.stringify(socialData));
+    }
 
     return newPost;
+  } catch (error) {
+    console.error('Error sharing playlist:', error);
+    throw error;
   }
 };
 
@@ -749,143 +418,7 @@ const getSocialFeed = async (
   filter: 'all' | 'following' | 'trending' = 'all'
 ): Promise<SocialPost[]> => {
   try {
-    let dbPosts;
-
-    if (filter === 'all') {
-      // Get all public posts and posts from users the current user follows
-      dbPosts = await prisma.post.findMany({
-        where: {
-          OR: [
-            { visibility: 'public' },
-            {
-              visibility: 'followers',
-              user: {
-                followers: {
-                  some: {
-                    followerId: userId
-                  }
-                }
-              }
-            },
-            { userId }
-          ]
-        },
-        include: {
-          likes: true,
-          comments: {
-            include: {
-              likes: true,
-              replies: {
-                include: {
-                  likes: true
-                }
-              }
-            }
-          },
-          user: true
-        },
-        orderBy: {
-          createdAt: 'desc'
-        }
-      });
-    } else if (filter === 'following') {
-      // Get posts only from users the current user follows
-      dbPosts = await prisma.post.findMany({
-        where: {
-          user: {
-            followers: {
-              some: {
-                followerId: userId
-              }
-            }
-          },
-          visibility: {
-            in: ['public', 'followers']
-          }
-        },
-        include: {
-          likes: true,
-          comments: {
-            include: {
-              likes: true,
-              replies: {
-                include: {
-                  likes: true
-                }
-              }
-            }
-          },
-          user: true
-        },
-        orderBy: {
-          createdAt: 'desc'
-        }
-      });
-    } else if (filter === 'trending') {
-      // Get posts sorted by engagement (likes + comments)
-      dbPosts = await prisma.post.findMany({
-        where: {
-          visibility: 'public'
-        },
-        include: {
-          likes: true,
-          comments: {
-            include: {
-              likes: true,
-              replies: {
-                include: {
-                  likes: true
-                }
-              }
-            }
-          },
-          user: true
-        }
-      });
-
-      // Sort by engagement
-      dbPosts.sort((a, b) => {
-        const aEngagement = a.likes.length + a.comments.length + a.shareCount;
-        const bEngagement = b.likes.length + b.comments.length + b.shareCount;
-        return bEngagement - aEngagement;
-      });
-    }
-
-    if (!dbPosts) {
-      return [];
-    }
-
-    // Transform to our interface
-    return dbPosts.map(post => ({
-      id: post.id,
-      userId: post.userId,
-      type: post.type as any,
-      content: post.content,
-      timestamp: post.createdAt.getTime(),
-      mediaId: post.mediaId || undefined,
-      mediaType: post.mediaType || undefined,
-      visibility: post.visibility as any,
-      likes: post.likes.map(like => like.userId),
-      comments: post.comments.map(comment => ({
-        id: comment.id,
-        userId: comment.userId,
-        content: comment.content,
-        timestamp: comment.createdAt.getTime(),
-        likes: comment.likes.map(like => like.userId),
-        replies: comment.replies.map(reply => ({
-          id: reply.id,
-          userId: reply.userId,
-          content: reply.content,
-          timestamp: reply.createdAt.getTime(),
-          likes: reply.likes.map(like => like.userId)
-        }))
-      })),
-      shares: post.shareCount
-    }));
-  } catch (error) {
-    console.error('Error getting social feed:', error);
-
-    // Fall back to localStorage
+    // Use localStorage
     const socialData = loadSocialDataSync();
     const userProfile = socialData.userProfiles.find(p => p.id === userId);
 
@@ -921,6 +454,9 @@ const getSocialFeed = async (
 
     // Sort by timestamp (newest first)
     return filteredPosts.sort((a, b) => b.timestamp - a.timestamp);
+  } catch (error) {
+    console.error('Error getting social feed:', error);
+    return [];
   }
 };
 
@@ -932,7 +468,7 @@ const addPlaylistComment = (
   userId: string,
   content: string
 ): PlaylistComment => {
-  const socialData = loadSocialData();
+  const socialData = loadSocialDataSync();
 
   // Create a new comment
   const newComment: PlaylistComment = {
@@ -955,7 +491,7 @@ const addPlaylistComment = (
  * Get comments for a playlist
  */
 const getPlaylistComments = (playlistId: string): PlaylistComment[] => {
-  const socialData = loadSocialData();
+  const socialData = loadSocialDataSync();
 
   // Get all comments for the playlist
   const comments = socialData.playlistComments.filter(comment =>
@@ -970,7 +506,7 @@ const getPlaylistComments = (playlistId: string): PlaylistComment[] => {
  * Like a playlist comment
  */
 const likePlaylistComment = (commentId: string, userId: string): boolean => {
-  const socialData = loadSocialData();
+  const socialData = loadSocialDataSync();
   const commentIndex = socialData.playlistComments.findIndex(c => c.id === commentId);
 
   if (commentIndex === -1) {
@@ -999,7 +535,7 @@ const replyToPlaylistComment = (
   userId: string,
   content: string
 ): PlaylistComment | null => {
-  const socialData = loadSocialData();
+  const socialData = loadSocialDataSync();
   const parentCommentIndex = socialData.playlistComments.findIndex(c => c.id === parentCommentId);
 
   if (parentCommentIndex === -1) {
@@ -1035,43 +571,16 @@ const replyToPlaylistComment = (
  */
 const searchUsers = async (query: string): Promise<UserProfile[]> => {
   try {
-    // Search in database
-    const users = await prisma.user.findMany({
-      where: {
-        OR: [
-          { username: { contains: query, mode: 'insensitive' } },
-          { name: { contains: query, mode: 'insensitive' } }
-        ]
-      },
-      include: {
-        followers: true,
-        following: true
-      }
-    });
-
-    // Transform to our interface
-    return users.map(user => ({
-      id: user.id,
-      username: user.username || '',
-      displayName: user.name || '',
-      bio: user.bio || '',
-      avatarUrl: user.image || '',
-      coverUrl: user.coverImage || '',
-      isVerified: user.isVerified || false,
-      joinDate: user.createdAt.toISOString(),
-      followers: user.followers.map(f => f.followerId),
-      following: user.following.map(f => f.followingId)
-    }));
-  } catch (error) {
-    console.error('Error searching users:', error);
-
-    // Fall back to localStorage
+    // Use localStorage
     const socialData = loadSocialDataSync();
 
     return socialData.userProfiles.filter(user =>
       user.username.toLowerCase().includes(query.toLowerCase()) ||
       user.displayName.toLowerCase().includes(query.toLowerCase())
     );
+  } catch (error) {
+    console.error('Error searching users:', error);
+    return [];
   }
 };
 

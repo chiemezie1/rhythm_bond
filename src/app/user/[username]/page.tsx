@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
-import socialService from '@/services/socialService';
 import UserProfile from '@/components/user/UserProfile';
-import SocialFeed from '@/components/social/SocialFeed';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 export default function UserProfilePage() {
@@ -15,7 +14,6 @@ export default function UserProfilePage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('profile');
 
   // Fetch user ID from username
   useEffect(() => {
@@ -31,9 +29,14 @@ export default function UserProfilePage() {
           return;
         }
 
-        // Find user by username
-        const users = await socialService.searchUsers(username);
-        const matchedUser = users.find(u => u.username === username);
+        // Find user by username using API
+        const response = await fetch(`/api/user/search?q=${encodeURIComponent(username)}`);
+        if (!response.ok) {
+          throw new Error('Failed to search users');
+        }
+
+        const data = await response.json();
+        const matchedUser = data.users.find((u: any) => u.username === username);
 
         if (matchedUser) {
           setUserId(matchedUser.id);
@@ -72,38 +75,23 @@ export default function UserProfilePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Tabs */}
-      <div className="mb-8 border-b border-dark-lightest">
-        <div className="flex overflow-x-auto">
-          <button
-            className={`px-4 py-2 border-b-2 ${
-              activeTab === 'profile'
-                ? 'border-primary text-white font-medium'
-                : 'border-transparent text-gray-400 hover:text-white'
-            }`}
-            onClick={() => setActiveTab('profile')}
+      {/* Breadcrumb Navigation */}
+      <div className="mb-6">
+        <nav className="flex items-center space-x-2 text-sm">
+          <Link
+            href="/"
+            className="text-gray-400 hover:text-white transition-colors"
           >
-            Profile
-          </button>
-          <button
-            className={`px-4 py-2 border-b-2 ${
-              activeTab === 'posts'
-                ? 'border-primary text-white font-medium'
-                : 'border-transparent text-gray-400 hover:text-white'
-            }`}
-            onClick={() => setActiveTab('posts')}
-          >
-            Posts
-          </button>
-        </div>
+            Dashboard
+          </Link>
+          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+          <span className="text-white">@{username}</span>
+        </nav>
       </div>
 
-      {/* Content */}
-      {activeTab === 'profile' ? (
-        <UserProfile userId={userId} />
-      ) : (
-        <SocialFeed userId={userId} />
-      )}
+      <UserProfile userId={userId} />
     </div>
   );
 }

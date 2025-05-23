@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useMusic } from '@/contexts/MusicContext';
+import { Track } from '@/services/musicService';
 import socialService from '@/services/socialService';
 import { UserProfile } from '@/services/socialService';
 import LoadingSpinner from './LoadingSpinner';
@@ -15,8 +16,8 @@ interface SearchBarProps {
   onSearch?: (query: string) => void;
 }
 
-export default function SearchBar({ 
-  className = '', 
+export default function SearchBar({
+  className = '',
   placeholder = 'Search for tracks, artists, or users...',
   onSearch
 }: SearchBarProps) {
@@ -28,12 +29,12 @@ export default function SearchBar({
   const [tracks, setTracks] = useState<Track[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const searchRef = useRef<HTMLDivElement>(null);
-  
+
   // Handle search input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
-    
+
     if (value.length > 1) {
       setIsSearching(true);
       setShowResults(true);
@@ -41,34 +42,34 @@ export default function SearchBar({
       setShowResults(false);
     }
   };
-  
+
   // Handle search submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (query.trim()) {
       router.push(`/search?q=${encodeURIComponent(query)}`);
       setShowResults(false);
-      
+
       if (onSearch) {
         onSearch(query);
       }
     }
   };
-  
+
   // Search for tracks and users
   useEffect(() => {
     const searchTimeout = setTimeout(async () => {
       if (query.length > 1) {
         try {
           // Search for tracks
-          const foundTracks = searchTracks(query);
+          const foundTracks = await searchTracks(query);
           setTracks(foundTracks.slice(0, 3));
-          
+
           // Search for users
           const foundUsers = await socialService.searchUsers(query);
           setUsers(foundUsers.slice(0, 3));
-          
+
           setIsSearching(false);
         } catch (error) {
           console.error('Error searching:', error);
@@ -76,10 +77,10 @@ export default function SearchBar({
         }
       }
     }, 300);
-    
+
     return () => clearTimeout(searchTimeout);
   }, [query, searchTracks]);
-  
+
   // Handle clicking outside of search results
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -87,13 +88,13 @@ export default function SearchBar({
         setShowResults(false);
       }
     }
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-  
+
   return (
     <div ref={searchRef} className={`relative ${className}`}>
       <form onSubmit={handleSubmit} className="relative">
@@ -110,7 +111,7 @@ export default function SearchBar({
           </svg>
         </div>
       </form>
-      
+
       {/* Search Results */}
       {showResults && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-dark-lighter dark:bg-dark-lighter rounded-lg shadow-lg overflow-hidden z-50">
@@ -155,7 +156,7 @@ export default function SearchBar({
                       ))}
                     </div>
                   )}
-                  
+
                   {/* User Results */}
                   {users.length > 0 && (
                     <div>
@@ -185,7 +186,7 @@ export default function SearchBar({
                       ))}
                     </div>
                   )}
-                  
+
                   {/* View All Results */}
                   <div className="p-3 border-t border-dark-lightest">
                     <button

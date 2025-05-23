@@ -205,7 +205,7 @@ model Follow {
 
 model Post {
   id          String    @id @default(cuid())
-  content     String    @db.Text
+  content     String?   @db.Text
   userId      String
   mediaType   String?   // track, playlist, etc.
   mediaId     String?

@@ -7,7 +7,7 @@ import Layout from '@/components/layout/Layout';
 import { useMusic } from '@/contexts/MusicContext';
 import { useAuth } from '@/hooks/useAuth';
 import { Track } from '@/services/musicService';
-import TrackMenu from '@/components/music/TrackMenu';
+import TrackMenu from '@/components/ui/TrackMenu';
 
 export default function FavoritesPage() {
   const { getFavorites, playTrack, toggleFavorite } = useMusic();
@@ -49,14 +49,14 @@ export default function FavoritesPage() {
   const handleShowTrackMenu = (e: React.MouseEvent, track: Track) => {
     e.stopPropagation();
     e.preventDefault();
-    
+
     // Calculate position for the menu
     const rect = e.currentTarget.getBoundingClientRect();
     setMenuPosition({
       x: rect.left,
       y: rect.bottom + window.scrollY
     });
-    
+
     setSelectedTrack(track);
     setShowTrackMenu(true);
   };
@@ -189,7 +189,7 @@ export default function FavoritesPage() {
           <TrackMenu
             track={selectedTrack}
             onClose={() => setShowTrackMenu(false)}
-            position={menuPosition}
+            buttonElement={document.createElement('div')}
           />
         )}
       </div>

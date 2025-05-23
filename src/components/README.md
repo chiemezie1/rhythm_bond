@@ -9,6 +9,7 @@ This directory contains all the React components for the RhythmBond application,
 - `music/` - Music-related components (tracks, playlists, etc.)
 - `player/` - Music player components
 - `social/` - Social features components
+- `ui/` - UI components (menus, buttons, etc.)
 - `user/` - User-related components (profile, settings, etc.)
 
 ## Common Components
@@ -32,13 +33,14 @@ This directory contains all the React components for the RhythmBond application,
 - `GenreMenu.tsx` - Menu for genre options
 - `MostPlayedTracks.tsx` - User's most played tracks
 - `MusicCategories.tsx` - Music categories/genres display
+- `PlaylistCard.tsx` - Card display for playlists
 - `PlaylistEditor.tsx` - Playlist creation and editing
 - `PlaylistsSection.tsx` - Display user playlists
 - `RecentlyPlayed.tsx` - Recently played tracks
 - `RecommendedSection.tsx` - Recommended tracks
 - `TrackCard.tsx` - Card display for a track
-- `TrackCardWithMenu.tsx` - Track card with context menu
-- `TrackMenu.tsx` - Context menu for tracks
+- `TrackGridItem.tsx` - Grid item display for tracks
+- `TrackTableRow.tsx` - Table row display for tracks
 - `TrendingTracks.tsx` - Trending tracks display
 - `UserPlaylists.tsx` - User's playlists
 
@@ -50,13 +52,15 @@ This directory contains all the React components for the RhythmBond application,
 ## Social Components
 
 - `CreatePost.tsx` - Component for creating new social posts
-- `PlaylistComments.tsx` - Component for displaying and adding comments to playlists
-- `SharePlaylist.tsx` - Modal component for sharing playlists with others
 - `SharedPlaylist.tsx` - Component for displaying shared playlists in the feed
 - `SimplifiedSocialFeed.tsx` - Modern social feed with CreatePost and SocialPost components
-- `SocialFeed.tsx` - Social feed component used in user profiles
 - `SocialPost.tsx` - Reusable component for displaying individual social posts
-- `SocialTabs.tsx` - Navigation tabs for the social section
+
+## UI Components
+
+- `FallbackImage.tsx` - Fallback image component for broken images
+- `TrackMenu.tsx` - Context menu for tracks with options
+- `TrackMenuButton.tsx` - Button component for track menus
 
 ## User Components
 

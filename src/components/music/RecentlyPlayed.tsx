@@ -1,25 +1,21 @@
-'use client';
+"use client"
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useMusic } from '@/contexts/MusicContext';
-import { Track } from '@/services/musicDatabase';
-import TrackMenu from './TrackMenu';
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { useMusic } from "@/contexts/MusicContext"
+import type { Track } from "@/services/musicService"
+import TrackGridItem from "./TrackGridItem"
 
 // Define a type for our processed track data
 interface RecentTrack extends Track {
-  playedAt: string;
+  playedAt: string
 }
 
 export default function RecentlyPlayed() {
-  const { getUserRecentlyPlayed, playTrack, isLoading: musicLoading, error: musicError } = useMusic();
-  const [tracks, setTracks] = useState<RecentTrack[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showTrackMenu, setShowTrackMenu] = useState(false);
-  const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
-  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | undefined>(undefined);
+  const { getUserRecentlyPlayed, playTrack } = useMusic()
+  const [tracks, setTracks] = useState<RecentTrack[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Get recently played tracks from the Music Context
   useEffect(() => {
@@ -27,72 +23,56 @@ export default function RecentlyPlayed() {
     const loadRecentlyPlayed = async () => {
       try {
         // Get user's recently played tracks
-        const recentTracks = getUserRecentlyPlayed(6);
+        const recentTracks = getUserRecentlyPlayed(6)
 
         if (!recentTracks || recentTracks.length === 0) {
-          setTracks([]);
-          setIsLoading(false);
-          return;
+          setTracks([])
+          setIsLoading(false)
+          return
         }
 
         // Generate relative time strings
         const getRelativeTimeString = (timestamp: number): string => {
-          const now = Date.now();
-          const diff = now - timestamp;
+          const now = Date.now()
+          const diff = now - timestamp
 
           // Convert to minutes, hours, days
-          const minutes = Math.floor(diff / (1000 * 60));
-          const hours = Math.floor(diff / (1000 * 60 * 60));
-          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const minutes = Math.floor(diff / (1000 * 60))
+          const hours = Math.floor(diff / (1000 * 60 * 60))
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24))
 
-          if (minutes < 1) return 'Just now';
-          if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
-          if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
-          if (days < 7) return `${days} day${days === 1 ? '' : 's'} ago`;
+          if (minutes < 1) return "Just now"
+          if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`
+          if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`
+          if (days < 7) return `${days} day${days === 1 ? "" : "s"} ago`
 
           // Format date for older items
-          const date = new Date(timestamp);
-          return date.toLocaleDateString();
-        };
+          const date = new Date(timestamp)
+          return date.toLocaleDateString()
+        }
 
         // Process the tracks to add played at times (without relying on userDataService)
         const processedTracks = recentTracks.map((track, index) => {
           // Just use current time as timestamp for now
-          const timestamp = Date.now() - (index * 3600000); // Each track is 1 hour older
+          const timestamp = Date.now() - index * 3600000 // Each track is 1 hour older
           return {
             ...track,
-            playedAt: getRelativeTimeString(timestamp)
-          };
-        });
+            playedAt: getRelativeTimeString(timestamp),
+          }
+        })
 
-        setTracks(processedTracks);
-        setIsLoading(false);
+        setTracks(processedTracks)
+        setIsLoading(false)
       } catch (err) {
-        console.error('Failed to process recent tracks:', err);
-        setError('Failed to load recent tracks. Please try again later.');
-        setIsLoading(false);
+        console.error("Failed to process recent tracks:", err)
+        setError("Failed to load recent tracks. Please try again later.")
+        setIsLoading(false)
       }
-    };
+    }
 
     // Call the async function
-    loadRecentlyPlayed();
-  }, [getUserRecentlyPlayed]);
-
-  // Handle showing the track menu
-  const handleShowTrackMenu = (e: React.MouseEvent, track: Track) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    // Calculate position for the menu
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMenuPosition({
-      x: rect.left,
-      y: rect.bottom + window.scrollY
-    });
-
-    setSelectedTrack(track);
-    setShowTrackMenu(true);
-  };
+    loadRecentlyPlayed()
+  }, [getUserRecentlyPlayed])
 
   return (
     <div className="mb-8">
@@ -120,59 +100,16 @@ export default function RecentlyPlayed() {
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {tracks.map((track) => (
-            <div key={track.id} className="relative bg-dark-lighter dark:bg-dark-lighter rounded-lg p-3 hover:bg-dark-lightest transition-colors cursor-pointer group">
-              <div className="relative aspect-square rounded-md overflow-hidden mb-3 group">
-                <Image
-                  src={track.thumbnail}
-                  alt={track.title}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <button
-                    className="bg-primary rounded-full p-2 transform hover:scale-110 transition-transform"
-                    onClick={() => playTrack(track)}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <Link
-                href={track.youtubeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-sm truncate block hover:text-primary"
-              >
-                {track.title}
-              </Link>
-              <span className="text-xs text-gray-400 truncate block">
-                {track.artist}
-              </span>
-              <p className="text-xs text-gray-500 mt-1">{track.playedAt}</p>
-
-              {/* Three-dot menu button - always visible at top right */}
-              <button
-                className="absolute top-2 right-2 p-1 rounded-full bg-dark-lighter hover:bg-dark-lightest z-20"
-                onClick={(e) => handleShowTrackMenu(e, track)}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                </svg>
-              </button>
-            </div>
+            <TrackGridItem
+              key={track.id}
+              track={track}
+              onPlay={playTrack}
+              showTimestamp={true}
+              timestamp={track.playedAt}
+              linkUrl={track.youtubeUrl}
+            />
           ))}
         </div>
-      )}
-
-      {/* Track Menu */}
-      {showTrackMenu && selectedTrack && (
-        <TrackMenu
-          track={selectedTrack}
-          onClose={() => setShowTrackMenu(false)}
-          position={menuPosition}
-        />
       )}
 
       {/* YouTube Attribution */}
@@ -187,5 +124,5 @@ export default function RecentlyPlayed() {
         </Link>
       </div>
     </div>
-  );
+  )
 }

@@ -59,14 +59,35 @@ This directory contains all the API endpoints for the RhythmBond application.
 - `GET /api/user/profile` - Get user profile
 - `PUT /api/user/profile` - Update user profile
 
-### User Preferences
+### Genres
 
-- `GET /api/user/preferences` - Get user preferences
-- `PUT /api/user/preferences` - Update user preferences
+- `GET /api/user/data/genres` - Get user genres
+- `POST /api/user/data/genres` - Create a new genre
+- `GET /api/user/data/genres/[id]` - Get a specific genre
+- `PUT /api/user/data/genres/[id]` - Update a genre
+- `DELETE /api/user/data/genres/[id]` - Delete a genre
+- `POST /api/user/data/genres/[id]/tracks` - Add a track to a genre
+- `DELETE /api/user/data/genres/[id]/tracks` - Remove a track from a genre
+
+### Most Played
+
+- `GET /api/user/data/most-played` - Get user most played tracks
+- `POST /api/user/data/most-played` - Update play count for a track
+
+### Home Layout
+
+- `GET /api/user/data/home-layout` - Get user home page layout preferences
+- `PUT /api/user/data/home-layout` - Update user home page layout preferences
 
 ### User Search
 
 - `GET /api/user/search` - Search for users
+
+### User Social
+
+- `GET /api/user/[id]/followers` - Get user followers
+- `POST /api/user/[id]/followers` - Follow/unfollow a user
+- `GET /api/user/[id]/following` - Get users that the user is following
 
 ## Social
 

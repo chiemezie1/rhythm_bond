@@ -94,6 +94,23 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Check if tag already exists for this user
+    const existingTag = await prisma.tag.findUnique({
+      where: {
+        userId_name: {
+          userId,
+          name
+        }
+      }
+    });
+
+    if (existingTag) {
+      return NextResponse.json(
+        { error: 'A tag with this name already exists' },
+        { status: 400 }
+      );
+    }
+
     // Create the tag
     const tag = await prisma.tag.create({
       data: {

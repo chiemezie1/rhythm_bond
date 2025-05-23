@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useMusic } from '@/contexts/MusicContext';
 import { Track } from '@/services/musicService';
-import TrackMenu from './TrackMenu';
+import TrackMenuButton from '@/components/ui/TrackMenuButton';
 
 // Define a type for our processed track data
 interface TrackWithLikes extends Track {
@@ -16,8 +16,6 @@ export default function TrendingTracks() {
   const { getTrendingTracks, playTrack, isLoading, error } = useMusic();
   const [tracks, setTracks] = useState<TrackWithLikes[]>([]);
   const [hoveredTrack, setHoveredTrack] = useState<string | null>(null);
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
 
   // Fetch trending tracks from our music database
   useEffect(() => {
@@ -47,19 +45,7 @@ export default function TrendingTracks() {
     fetchTrendingTracks();
   }, [getTrendingTracks]);
 
-  // Handle clicking outside of the menu
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setActiveMenu(null);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  // No need for click outside handler with the new TrackMenuButton
 
   // Toggle like status
   const toggleLike = (id: string) => {
@@ -193,28 +179,13 @@ export default function TrendingTracks() {
                   </td>
                   <td className="py-3 px-4 relative">
                     {/* 3-Dot Menu Button */}
-                    <button
-                      className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-dark-lightest"
-                      onClick={() => setActiveMenu(activeMenu === track.id ? null : track.id)}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                      </svg>
-                    </button>
-
-                    {/* Dropdown Menu */}
-                    {activeMenu === track.id && (
-                      <div ref={menuRef} className="absolute right-0 top-0 z-50">
-                        <TrackMenu
-                          track={track}
-                          onClose={() => setActiveMenu(null)}
-                          position={{
-                            x: menuRef.current?.getBoundingClientRect().right || 0,
-                            y: menuRef.current?.getBoundingClientRect().top || 0
-                          }}
-                        />
-                      </div>
-                    )}
+                    <TrackMenuButton
+                      track={track}
+                      menuPosition="left"
+                      showBackground={false}
+                      iconSize={18}
+                      className="text-gray-400 hover:text-white"
+                    />
                   </td>
                 </tr>
               ))}

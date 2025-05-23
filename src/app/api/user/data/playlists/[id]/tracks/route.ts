@@ -19,7 +19,7 @@ export async function POST(
     }
 
     const userId = session.user.id;
-    const playlistId = params.id;
+    const { id: playlistId } = await params;
     const { track } = await req.json();
 
     if (!track || !track.id) {
@@ -49,23 +49,53 @@ export async function POST(
       );
     }
 
-    // Check if the track exists in the database
+    // Check if the track exists in the database by ID first, then by youtubeId
     let dbTrack = await prisma.track.findUnique({
-      where: { youtubeId: track.id }
+      where: { id: track.id }
     });
+
+    // If not found by ID, try by youtubeId
+    if (!dbTrack && track.youtubeId) {
+      dbTrack = await prisma.track.findUnique({
+        where: { youtubeId: track.youtubeId }
+      });
+    }
+
+    // If still not found, try by youtubeId using track.id as fallback
+    if (!dbTrack) {
+      dbTrack = await prisma.track.findUnique({
+        where: { youtubeId: track.id }
+      });
+    }
 
     // If the track doesn't exist, create it
     if (!dbTrack) {
-      dbTrack = await prisma.track.create({
-        data: {
-          youtubeId: track.id,
-          title: track.title,
-          artist: track.artist,
-          genre: track.genre || 'Unknown',
-          thumbnail: track.thumbnail,
-          youtubeUrl: track.youtubeUrl || `https://www.youtube.com/watch?v=${track.id}` // Add the required youtubeUrl field
+      try {
+        dbTrack = await prisma.track.create({
+          data: {
+            youtubeId: track.youtubeId || track.id,
+            title: track.title,
+            artist: track.artist,
+            genre: track.genre || 'Unknown',
+            thumbnail: track.thumbnail,
+            youtubeUrl: track.youtubeUrl || `https://www.youtube.com/watch?v=${track.youtubeId || track.id}`,
+            duration: track.duration || "0:00"
+          }
+        });
+      } catch (createError) {
+        // If creation fails due to unique constraint, try to find the track again
+        if ((createError as any).code === 'P2002') {
+          dbTrack = await prisma.track.findUnique({
+            where: { youtubeId: track.youtubeId || track.id }
+          });
+
+          if (!dbTrack) {
+            throw new Error('Failed to create or find track');
+          }
+        } else {
+          throw createError;
         }
-      });
+      }
     }
 
     // Check if the track is already in the playlist
@@ -83,11 +113,20 @@ export async function POST(
       );
     }
 
+    // Get the highest order value for tracks in this playlist
+    const highestOrderTrack = await prisma.playlistTrack.findFirst({
+      where: { playlistId },
+      orderBy: { order: 'desc' }
+    });
+
+    const newOrder = highestOrderTrack ? highestOrderTrack.order + 1 : 0;
+
     // Add the track to the playlist
     await prisma.playlistTrack.create({
       data: {
         playlistId,
-        trackId: dbTrack.id
+        trackId: dbTrack.id,
+        order: newOrder
       }
     });
 
@@ -117,9 +156,12 @@ export async function DELETE(
     }
 
     const userId = session.user.id;
-    const playlistId = params.id;
+    const { id: playlistId } = await params;
     const { searchParams } = new URL(req.url);
     const trackId = searchParams.get('trackId');
+
+    console.log('DELETE request - trackId:', trackId);
+    console.log('DELETE request - playlistId:', playlistId);
 
     if (!trackId) {
       return NextResponse.json(
@@ -148,17 +190,30 @@ export async function DELETE(
       );
     }
 
-    // Get the track from the database
-    const dbTrack = await prisma.track.findUnique({
-      where: { youtubeId: trackId }
+    // Get the track from the database by ID first, then by youtubeId
+    let dbTrack = await prisma.track.findUnique({
+      where: { id: trackId }
     });
 
+    console.log('Track found by ID:', dbTrack ? 'Yes' : 'No');
+
+    // If not found by ID, try by youtubeId
     if (!dbTrack) {
+      dbTrack = await prisma.track.findUnique({
+        where: { youtubeId: trackId }
+      });
+      console.log('Track found by youtubeId:', dbTrack ? 'Yes' : 'No');
+    }
+
+    if (!dbTrack) {
+      console.log('Track not found in database');
       return NextResponse.json(
         { error: 'Track not found' },
         { status: 404 }
       );
     }
+
+    console.log('Found track:', dbTrack.id, dbTrack.title);
 
     // Remove the track from the playlist
     await prisma.playlistTrack.deleteMany({

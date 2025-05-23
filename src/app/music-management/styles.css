@@ -1,0 +1,182 @@
+/* Music Management Styles */
+
+/* Card hover effects */
+.track-card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.track-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Three-dot menu button */
+.menu-button {
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.track-card:hover .menu-button {
+  opacity: 1;
+}
+
+/* Menu animations */
+.menu-popup {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Submenu animations */
+.submenu-enter {
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Custom scrollbar for menus */
+.menu-scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.menu-scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+
+.menu-scrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.menu-scrollable::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+/* Button hover effects */
+.menu-item {
+  transition: background-color 0.15s ease-in-out;
+}
+
+.menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Input focus effects */
+.menu-input {
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.menu-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.25);
+}
+
+/* List view row hover effect */
+.list-row {
+  transition: background-color 0.15s ease-in-out;
+}
+
+.list-row:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Play button overlay effect */
+.play-overlay {
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.track-card:hover .play-overlay {
+  opacity: 1;
+}
+
+/* Tag colors */
+.tag-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+/* Loading spinner */
+.spinner {
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* View toggle buttons */
+.view-toggle {
+  transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+
+.view-toggle:hover:not(.active) {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.view-toggle.active {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* Search input */
+.search-input {
+  transition: box-shadow 0.15s ease-in-out;
+}
+
+.search-input:focus {
+  box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.25);
+}
+
+/* Empty state */
+.empty-state {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .grid-view {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .grid-view {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1025px) {
+  .grid-view {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}

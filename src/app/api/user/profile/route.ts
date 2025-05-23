@@ -9,16 +9,16 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');
     const username = searchParams.get('username');
-    
+
     if (!userId && !username) {
       return NextResponse.json(
         { error: 'Missing user ID or username' },
         { status: 400 }
       );
     }
-    
+
     let user;
-    
+
     if (userId) {
       // Get user by ID
       user = await prisma.user.findUnique({
@@ -38,14 +38,14 @@ export async function GET(req: NextRequest) {
         }
       });
     }
-    
+
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       );
     }
-    
+
     // Transform to our interface
     const userProfile = {
       id: user.id,
@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
       followers: user.followers.map(f => f.followerId),
       following: user.following.map(f => f.followingId)
     };
-    
+
     return NextResponse.json({ user: userProfile });
   } catch (error) {
     console.error('Error fetching user profile:', error);
@@ -74,18 +74,18 @@ export async function PUT(req: NextRequest) {
   try {
     // Get the session to verify the user is authenticated
     const session = await getServerSession(authOptions);
-    
+
     if (!session || !session.user) {
       return NextResponse.json(
         { error: 'You must be logged in to update your profile' },
         { status: 401 }
       );
     }
-    
+
     // Parse the request body
     const body = await req.json();
     const { displayName, username, bio } = body;
-    
+
     // Validate required fields
     if (!displayName || !username) {
       return NextResponse.json(
@@ -93,16 +93,20 @@ export async function PUT(req: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     // Check if username is already taken by another user
-    if (username !== session.user.username) {
+    const currentUser = await prisma.user.findUnique({
+      where: { id: session.user.id }
+    });
+
+    if (username !== currentUser?.username) {
       const existingUser = await prisma.user.findFirst({
         where: {
           username,
           id: { not: session.user.id }
         }
       });
-      
+
       if (existingUser) {
         return NextResponse.json(
           { error: 'Username is already taken' },
@@ -110,7 +114,7 @@ export async function PUT(req: NextRequest) {
         );
       }
     }
-    
+
     // Update the user profile
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
@@ -124,7 +128,7 @@ export async function PUT(req: NextRequest) {
         following: true
       }
     });
-    
+
     // Transform to our interface
     const userProfile = {
       id: updatedUser.id,
@@ -138,7 +142,7 @@ export async function PUT(req: NextRequest) {
       followers: updatedUser.followers.map(f => f.followerId),
       following: updatedUser.following.map(f => f.followingId)
     };
-    
+
     return NextResponse.json({ user: userProfile });
   } catch (error) {
     console.error('Error updating user profile:', error);

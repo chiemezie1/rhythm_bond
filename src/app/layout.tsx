@@ -4,6 +4,7 @@ import "./globals.css";
 import "./output.css";
 import AuthProvider from "@/providers/AuthProvider";
 import { MusicProvider } from "@/contexts/MusicContext";
+import { TrackMenuProvider } from "@/contexts/TrackMenuContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +32,9 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans bg-light dark:bg-dark text-dark dark:text-light`}>
         <AuthProvider>
           <MusicProvider>
-            {children}
+            <TrackMenuProvider>
+              {children}
+            </TrackMenuProvider>
           </MusicProvider>
         </AuthProvider>
       </body>

@@ -1,6 +1,6 @@
-# Contributing to UrbanPulse
+# Contributing to RhythmBond
 
-Thank you for your interest in contributing to UrbanPulse! This document provides guidelines and instructions for contributing to this project.
+Thank you for your interest in contributing to RhythmBond! This document provides guidelines and instructions for contributing to this project.
 
 ## Code of Conduct
 
@@ -101,4 +101,4 @@ All submissions require review. We use GitHub pull requests for this purpose.
 - `good first issue`: Good for newcomers
 - `help wanted`: Extra attention is needed
 
-Thank you for contributing to UrbanPulse!
+Thank you for contributing to RhythmBond!

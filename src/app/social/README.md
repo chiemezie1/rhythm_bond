@@ -21,12 +21,7 @@ The main component used in the social page, providing a modern feed experience w
 - Filtering options (all, following, trending)
 - Loading, empty, and error states
 
-### SocialFeed
 
-Used in user profile pages to display a user's posts:
-- Shows posts from a specific user
-- Includes post creation functionality
-- Supports liking, commenting, and sharing
 
 ### CreatePost
 
@@ -58,20 +53,7 @@ A component for displaying shared playlists in the feed:
 - Track listing
 - Play and add to library options
 
-### PlaylistComments
 
-A component for displaying and adding comments to playlists:
-- Comment listing
-- Comment input
-- Like functionality
-
-### SocialTabs
-
-Navigation tabs for the social section:
-- Feed
-- Discover
-- Following
-- Trending
 
 ## API Endpoints
 
@@ -112,11 +94,11 @@ The social features use the following database tables:
 ## Usage
 
 The social features are accessible through the `/social` route in the application. Users can:
-1. View their social feed
-2. Create new posts
+1. View their social feed with simplified interface
+2. Create new posts with text and media attachments
 3. Interact with posts (like, comment, share)
-4. Follow other users
-5. View trending content
+4. Share playlists and tracks with the community
+5. View posts from all users or filter by following
 
 ## Implementation Details
 

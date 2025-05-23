@@ -6,20 +6,20 @@ export async function GET(req: NextRequest) {
     // Get the query from the query parameters
     const { searchParams } = new URL(req.url);
     const query = searchParams.get('q');
-    
+
     if (!query) {
       return NextResponse.json(
         { error: 'Missing search query' },
         { status: 400 }
       );
     }
-    
-    // Search for users
+
+    // Search for users (MySQL doesn't support mode: 'insensitive', but contains is case-insensitive by default in MySQL)
     const users = await prisma.user.findMany({
       where: {
         OR: [
-          { username: { contains: query, mode: 'insensitive' } },
-          { name: { contains: query, mode: 'insensitive' } }
+          { username: { contains: query } },
+          { name: { contains: query } }
         ]
       },
       include: {
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
       },
       take: 10 // Limit to 10 results
     });
-    
+
     // Transform to our interface
     const userProfiles = users.map(user => ({
       id: user.id,
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
       followers: user.followers.map(f => f.followerId),
       following: user.following.map(f => f.followingId)
     }));
-    
+
     return NextResponse.json({ users: userProfiles });
   } catch (error) {
     console.error('Error searching users:', error);

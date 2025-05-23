@@ -10,24 +10,24 @@
 
 ## Contributors
 
-We appreciate all contributions to the UrbanPulse project. If you've contributed to this project, please add your name below:
+We appreciate all contributions to the RhythmBond project. If you've contributed to this project, please add your name below:
 
 - *Your name could be here! Make a contribution and add yourself.*
 
 ## Acknowledgments
 
-We would like to thank the following individuals and organizations for their support, inspiration, and resources that have helped make UrbanPulse possible:
+We would like to thank the following individuals and organizations for their support, inspiration, and resources that have helped make RhythmBond possible:
 
 - The Next.js team for their excellent framework
 - The Prisma team for their powerful ORM
 - The Tailwind CSS team for their utility-first CSS framework
-- The shadcn/ui team for their beautiful UI components
-- OpenWeatherMap for their weather data API
-- Geoapify for their location-based services
+- YouTube for providing the music streaming platform
+- The React team for their powerful library
+- The TypeScript team for type safety
 
 ## How to Contribute
 
-Interested in contributing to UrbanPulse? Check out our [contribution guidelines](CONTRIBUTING.md) to get started.
+Interested in contributing to RhythmBond? Check out our [contribution guidelines](CONTRIBUTING.md) to get started.
 
 ## Contact
 

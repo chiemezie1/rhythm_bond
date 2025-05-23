@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useMusic } from '@/contexts/MusicContext';
-import { Track } from '@/services/musicDatabase';
-import TrackMenu from './TrackMenu';
+import { Track } from '@/services/musicService';
+import TrackMenuButton from '@/components/ui/TrackMenuButton';
 
 export default function MostPlayedTracks() {
   const { getMostPlayedTracks, playTrack, isFavorite, toggleFavorite } = useMusic();
@@ -13,9 +13,6 @@ export default function MostPlayedTracks() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
-  const [showTrackMenu, setShowTrackMenu] = useState(false);
-  const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
-  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | undefined>(undefined);
 
   // Get most played tracks
   useEffect(() => {
@@ -39,29 +36,19 @@ export default function MostPlayedTracks() {
   }, [getMostPlayedTracks, isFavorite]);
 
   // Handle toggling a track as favorite
-  const handleToggleFavorite = (track: Track, event: React.MouseEvent) => {
+  const handleToggleFavorite = async (track: Track, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent triggering the row click (play)
-    const newState = toggleFavorite(track);
+    const newState = await toggleFavorite(track);
     setFavorites(prev => ({
       ...prev,
       [track.id]: newState
     }));
   };
 
-  // Handle showing the track menu
-  const handleShowTrackMenu = (e: React.MouseEvent, track: Track) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    // Calculate position for the menu - position it to the right of the button
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMenuPosition({
-      x: rect.right,
-      y: rect.top
-    });
-
-    setSelectedTrack(track);
-    setShowTrackMenu(true);
+  // Handle removing a track from most played (not implemented)
+  const handleRemoveFromMostPlayed = (track: Track) => {
+    // This would be implemented in a real application
+    console.log('Remove from most played:', track.title);
   };
 
   if (isLoading) {
@@ -160,15 +147,14 @@ export default function MostPlayedTracks() {
                             <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
                           </svg>
                         </button>
-                        <button
-                          className="icon-btn text-gray-400 hover:text-white"
-                          onClick={(e) => handleShowTrackMenu(e, track)}
-                          title="More options"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                          </svg>
-                        </button>
+                        <TrackMenuButton
+                          track={track}
+                          onRemove={() => handleRemoveFromMostPlayed(track)}
+                          iconSize={18}
+                          menuPosition="left"
+                          showBackground={false}
+                          className="text-gray-400 hover:text-white"
+                        />
                       </div>
                     </td>
                   </tr>
@@ -179,14 +165,7 @@ export default function MostPlayedTracks() {
         </div>
       )}
 
-      {/* Track Menu */}
-      {showTrackMenu && selectedTrack && (
-        <TrackMenu
-          track={selectedTrack}
-          onClose={() => setShowTrackMenu(false)}
-          position={menuPosition}
-        />
-      )}
+      {/* Track Menu is now handled by the TrackMenuProvider */}
     </div>
   );
 }

@@ -94,9 +94,10 @@ export async function POST(req: NextRequest) {
     // Get the post data from the request body
     const { content, mediaType, mediaId, visibility = 'public' } = await req.json();
 
-    if (!content || content.trim() === '') {
+    // Validate that either content or media is provided
+    if ((!content || content.trim() === '') && (!mediaType || !mediaId)) {
       return NextResponse.json(
-        { error: 'Post content is required' },
+        { error: 'Post must have either content or media' },
         { status: 400 }
       );
     }

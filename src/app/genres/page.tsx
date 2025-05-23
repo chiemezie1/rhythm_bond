@@ -32,14 +32,14 @@ export default function GenresPage() {
           return;
         }
 
-        const allGenres = getGenres();
+        const allGenres = await getGenres();
         setGenres(allGenres);
-        
+
         // Select the first genre by default if available
         if (allGenres.length > 0 && !selectedGenre) {
           setSelectedGenre(allGenres[0]);
         }
-        
+
         setIsLoading(false);
       } catch (err) {
         console.error('Error loading genres:', err);
@@ -78,10 +78,12 @@ export default function GenresPage() {
     if (!newGenreName.trim() || !isAuthenticated) return;
 
     try {
-      const newGenre = createGenre(newGenreName, newGenreColor);
-      setGenres([...genres, newGenre]);
-      setSelectedGenre(newGenre);
-      setNewGenreName('');
+      const newGenre = await createGenre(newGenreName, newGenreColor);
+      if (newGenre) {
+        setGenres([...genres, newGenre]);
+        setSelectedGenre(newGenre);
+        setNewGenreName('');
+      }
     } catch (err) {
       console.error('Error creating genre:', err);
       setError('Failed to create genre. Please try again.');
@@ -91,14 +93,14 @@ export default function GenresPage() {
   // Handle removing a track from the genre
   const handleRemoveFromGenre = async (track: Track, e?: React.MouseEvent) => {
     if (!selectedGenre) return;
-    
+
     if (e) {
       e.stopPropagation();
       e.preventDefault();
     }
 
     try {
-      const success = removeTrackFromGenre(selectedGenre.id, track.id);
+      const success = await removeTrackFromGenre(selectedGenre.id, track.id);
       if (success) {
         // Update the local state to remove the track
         setTracks(tracks.filter(t => t.id !== track.id));
@@ -146,7 +148,7 @@ export default function GenresPage() {
             <div className="md:col-span-1">
               <div className="bg-dark-lighter rounded-xl p-4 mb-4">
                 <h2 className="text-xl font-bold mb-4">Genres</h2>
-                
+
                 {/* Create New Genre */}
                 <div className="mb-4">
                   <div className="flex gap-2 mb-2">
@@ -172,7 +174,7 @@ export default function GenresPage() {
                     Create Genre
                   </button>
                 </div>
-                
+
                 {/* Genre List */}
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {genres.length === 0 ? (
@@ -199,7 +201,7 @@ export default function GenresPage() {
                 </div>
               </div>
             </div>
-            
+
             {/* Tracks for Selected Genre */}
             <div className="md:col-span-3">
               {selectedGenre ? (
@@ -211,7 +213,7 @@ export default function GenresPage() {
                     ></div>
                     <h2 className="text-2xl font-bold">{selectedGenre.name}</h2>
                   </div>
-                  
+
                   {tracks.length === 0 ? (
                     <div className="bg-dark-lighter rounded-xl p-8 text-center">
                       <p className="text-gray-400 mb-4">No tracks in this genre yet.</p>

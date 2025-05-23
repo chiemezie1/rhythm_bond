@@ -29,6 +29,7 @@ interface MusicContextType {
   getRecentlyPlayedTracks: (limit?: number) => Promise<Track[]>;
   getSimilarTracks: (track: Track, limit?: number) => Promise<Track[]>;
   getTrackById: (trackId: string) => Track | null;
+  getAllTracks: () => Promise<Track[]>;
 
   // User data - Recently played
   addToRecentlyPlayed: (track: Track) => Promise<void>;
@@ -49,6 +50,7 @@ interface MusicContextType {
 
   // User data - Custom tags
   createCustomTag: (name: string, color?: string) => Promise<CustomTag>;
+  createTag: (name: string, color?: string) => Promise<CustomTag>; // Alias for createCustomTag
   getCustomTags: () => CustomTag[];
   addTagToTrack: (tagId: string, trackId: string) => Promise<boolean>;
   removeTagFromTrack: (tagId: string, trackId: string) => Promise<boolean>;
@@ -59,7 +61,7 @@ interface MusicContextType {
   getMostPlayedTracks: (limit?: number) => Track[];
 
   // Genre-related functions
-  getGenres: () => any[];
+  getGenres: () => Promise<any[]>;
   createGenre: (name: string, color: string, description?: string) => Promise<any>;
   addTrackToGenre: (genreId: string, trackId: string) => Promise<boolean>;
   removeTrackFromGenre: (genreId: string, trackId: string) => Promise<boolean>;
@@ -126,42 +128,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     loadMusicData();
   }, []);
 
-  // Load user data when session changes
-  useEffect(() => {
-    const loadUserData = async () => {
-      if (!userId) {
-        // Reset user data if not logged in
-        setFavorites([]);
-        setPlaylists([]);
-        setCustomTags([]);
-        setRecentlyPlayed([]);
-        setMostPlayed([]);
-        return;
-      }
 
-      try {
-        // Load user data from the database
-        const userFavorites = await userDataService.getFavorites(userId);
-        setFavorites(userFavorites);
-
-        const userPlaylists = await userDataService.getPlaylists(userId);
-        setPlaylists(userPlaylists);
-
-        const userTags = await userDataService.getCustomTags(userId);
-        setCustomTags(userTags);
-
-        const userRecentlyPlayed = await userDataService.getRecentlyPlayed(userId);
-        setRecentlyPlayed(userRecentlyPlayed);
-
-        const userMostPlayed = await userDataService.getMostPlayed(allTracks, 10, userId);
-        setMostPlayed(userMostPlayed);
-      } catch (error) {
-        console.error('Error loading user data:', error);
-      }
-    };
-
-    loadUserData();
-  }, [userId, allTracks]);
 
   // Load user data when session changes
   useEffect(() => {
@@ -179,7 +146,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             // Transform the data to match our expected format
             const formattedRecentlyPlayed = [{
               tracks: localRecentlyPlayed.map((item: any) => item.track),
-              timestamp: new Date().toISOString()
+              timestamp: Date.now()
             }];
             setRecentlyPlayed(formattedRecentlyPlayed);
           } else {
@@ -410,6 +377,11 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Get similar tracks
   const getSimilarTracksFunc = async (track: Track, limit: number = 5): Promise<Track[]> => {
     return await musicService.getSimilarTracks(track, limit);
+  };
+
+  // Get all tracks
+  const getAllTracksFunc = async (): Promise<Track[]> => {
+    return allTracks;
   };
 
   // User data functions
@@ -905,6 +877,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     getRecentlyPlayedTracks: getRecentlyPlayedTracksFunc,
     getSimilarTracks: getSimilarTracksFunc,
     getTrackById,
+    getAllTracks: getAllTracksFunc,
 
     // User data - Recently played
     addToRecentlyPlayed,
@@ -925,6 +898,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // User data - Custom tags
     createCustomTag,
+    createTag: createCustomTag, // Alias for createCustomTag
     getCustomTags,
     addTagToTrack,
     removeTagFromTrack,

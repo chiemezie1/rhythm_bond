@@ -8,10 +8,10 @@ import { useMusic } from '@/contexts/MusicContext';
 import { useAuth } from '@/hooks/useAuth';
 import { Track } from '@/services/musicService';
 import { CustomTag } from '@/services/userDataService';
-import TrackMenu from '@/components/music/TrackMenu';
+import TrackMenu from '@/components/ui/TrackMenu';
 
 export default function TagsPage() {
-  const { getCustomTags, createCustomTag, getTagsForTrack, getTracksForTag, playTrack, removeTagFromTrack } = useMusic();
+  const { getCustomTags, createCustomTag, getTagsForTrack, playTrack, removeTagFromTrack } = useMusic();
   const { isAuthenticated, user } = useAuth();
   const [tags, setTags] = useState<CustomTag[]>([]);
   const [selectedTag, setSelectedTag] = useState<CustomTag | null>(null);
@@ -37,14 +37,20 @@ export default function TagsPage() {
           return;
         }
 
-        const userTags = getCustomTags();
-        setTags(userTags);
-        
-        // Select the first tag by default if available
-        if (userTags.length > 0 && !selectedTag) {
-          setSelectedTag(userTags[0]);
+        // Fetch tags from API
+        const response = await fetch('/api/user/data/tags');
+        if (!response.ok) {
+          throw new Error('Failed to fetch tags');
         }
-        
+
+        const data = await response.json();
+        setTags(data.tags || []);
+
+        // Select the first tag by default if available
+        if (data.tags && data.tags.length > 0 && !selectedTag) {
+          setSelectedTag(data.tags[0]);
+        }
+
         setIsLoading(false);
       } catch (err) {
         console.error('Error loading tags:', err);
@@ -54,7 +60,7 @@ export default function TagsPage() {
     };
 
     loadTags();
-  }, [isAuthenticated, getCustomTags, selectedTag]);
+  }, [isAuthenticated]);
 
   // Load tracks for selected tag
   useEffect(() => {
@@ -65,8 +71,14 @@ export default function TagsPage() {
       }
 
       try {
-        const taggedTracks = getTracksForTag(selectedTag.id);
-        setTracks(taggedTracks);
+        // Fetch tracks for the selected tag from API
+        const response = await fetch(`/api/user/data/tags/${selectedTag.id}/tracks`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch tracks for tag');
+        }
+
+        const data = await response.json();
+        setTracks(data.tracks || []);
       } catch (err) {
         console.error('Error loading tracks for tag:', err);
         setError('Failed to load tracks for this tag.');
@@ -74,20 +86,20 @@ export default function TagsPage() {
     };
 
     loadTracksForTag();
-  }, [selectedTag, getTracksForTag]);
+  }, [selectedTag]);
 
   // Handle showing the track menu
   const handleShowTrackMenu = (e: React.MouseEvent, track: Track) => {
     e.stopPropagation();
     e.preventDefault();
-    
+
     // Calculate position for the menu
     const rect = e.currentTarget.getBoundingClientRect();
     setMenuPosition({
       x: rect.left,
       y: rect.bottom + window.scrollY
     });
-    
+
     setSelectedTrack(track);
     setShowTrackMenu(true);
   };
@@ -97,31 +109,60 @@ export default function TagsPage() {
     if (!newTagName.trim() || !isAuthenticated) return;
 
     try {
-      const newTag = await createCustomTag(newTagName, newTagColor);
+      const response = await fetch('/api/user/data/tags', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: newTagName.trim(),
+          color: newTagColor,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create tag');
+      }
+
+      const data = await response.json();
+      const newTag = data.tag;
+
       setTags([...tags, newTag]);
       setSelectedTag(newTag);
       setNewTagName('');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error creating tag:', err);
-      setError('Failed to create tag. Please try again.');
+      setError(err.message || 'Failed to create tag. Please try again.');
     }
   };
 
   // Handle removing a track from the tag
   const handleRemoveFromTag = async (track: Track, e?: React.MouseEvent) => {
     if (!selectedTag) return;
-    
+
     if (e) {
       e.stopPropagation();
       e.preventDefault();
     }
 
     try {
-      const success = await removeTagFromTrack(selectedTag.id, track.id);
-      if (success) {
-        // Update the local state to remove the track
-        setTracks(tracks.filter(t => t.id !== track.id));
+      const response = await fetch(`/api/user/data/tags/${selectedTag.id}/tracks`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          trackId: track.id,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove track from tag');
       }
+
+      // Update the local state to remove the track
+      setTracks(tracks.filter(t => t.id !== track.id));
     } catch (err) {
       console.error('Error removing track from tag:', err);
       setError('Failed to remove track from tag.');
@@ -165,7 +206,7 @@ export default function TagsPage() {
             <div className="md:col-span-1">
               <div className="bg-dark-lighter rounded-xl p-4 mb-4">
                 <h2 className="text-xl font-bold mb-4">Your Tags</h2>
-                
+
                 {/* Create New Tag */}
                 <div className="mb-4">
                   <div className="flex gap-2 mb-2">
@@ -191,7 +232,7 @@ export default function TagsPage() {
                     Create Tag
                   </button>
                 </div>
-                
+
                 {/* Tag List */}
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {tags.length === 0 ? (
@@ -213,7 +254,7 @@ export default function TagsPage() {
                         ></div>
                         <span className="truncate">{tag.name}</span>
                         <span className="ml-auto text-xs text-gray-400">
-                          {getTracksForTag(tag.id).length}
+                          {selectedTag?.id === tag.id ? tracks.length : '...'}
                         </span>
                       </button>
                     ))
@@ -221,7 +262,7 @@ export default function TagsPage() {
                 </div>
               </div>
             </div>
-            
+
             {/* Tracks for Selected Tag */}
             <div className="md:col-span-3">
               {selectedTag ? (
@@ -233,7 +274,7 @@ export default function TagsPage() {
                     ></div>
                     <h2 className="text-2xl font-bold">{selectedTag.name}</h2>
                   </div>
-                  
+
                   {tracks.length === 0 ? (
                     <div className="bg-dark-lighter rounded-xl p-8 text-center">
                       <p className="text-gray-400 mb-4">No tracks with this tag yet.</p>
@@ -324,7 +365,7 @@ export default function TagsPage() {
           <TrackMenu
             track={selectedTrack}
             onClose={() => setShowTrackMenu(false)}
-            position={menuPosition}
+            buttonElement={document.createElement('div')}
           />
         )}
       </div>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useMusic } from '@/contexts/MusicContext';
-import TrackCardWithMenu from './TrackCardWithMenu';
+import TrackCard from './TrackCard';
 import Image from 'next/image';
 import { getFallbackThumbnail, DEFAULT_THUMBNAIL } from '@/utils/imageUtils';
 
@@ -48,21 +48,21 @@ export default function AdvancedSearch() {
       if (filters.genre && filters.genre.trim() !== '') {
         const genreFilter = filters.genre.toLowerCase().trim();
         filteredResults = filteredResults.filter(track =>
-          track.genre.toLowerCase().includes(genreFilter)
+          track.genre?.toLowerCase().includes(genreFilter)
         );
       }
 
       if (filters.duration.min) {
         const minSeconds = parseInt(filters.duration.min) * 60;
         filteredResults = filteredResults.filter(track =>
-          track.duration >= minSeconds
+          typeof track.duration === 'number' && track.duration >= minSeconds
         );
       }
 
       if (filters.duration.max) {
         const maxSeconds = parseInt(filters.duration.max) * 60;
         filteredResults = filteredResults.filter(track =>
-          track.duration <= maxSeconds
+          typeof track.duration === 'number' && track.duration <= maxSeconds
         );
       }
 
@@ -76,9 +76,17 @@ export default function AdvancedSearch() {
       } else if (sortBy === 'artist-desc') {
         filteredResults.sort((a, b) => b.artist.localeCompare(a.artist));
       } else if (sortBy === 'duration-asc') {
-        filteredResults.sort((a, b) => a.duration - b.duration);
+        filteredResults.sort((a, b) => {
+          const aDuration = typeof a.duration === 'string' ? parseInt(a.duration) || 0 : a.duration || 0;
+          const bDuration = typeof b.duration === 'string' ? parseInt(b.duration) || 0 : b.duration || 0;
+          return aDuration - bDuration;
+        });
       } else if (sortBy === 'duration-desc') {
-        filteredResults.sort((a, b) => b.duration - a.duration);
+        filteredResults.sort((a, b) => {
+          const aDuration = typeof a.duration === 'string' ? parseInt(a.duration) || 0 : a.duration || 0;
+          const bDuration = typeof b.duration === 'string' ? parseInt(b.duration) || 0 : b.duration || 0;
+          return bDuration - aDuration;
+        });
       }
 
       setSearchResults(filteredResults);
@@ -95,17 +103,19 @@ export default function AdvancedSearch() {
   const handleFilterChange = (field: string, value: string) => {
     if (field === 'duration.min' || field === 'duration.max') {
       const [parent, child] = field.split('.');
-      setFilters(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent as keyof typeof prev] as any,
-          [child]: value
-        }
-      }));
+      if (parent === 'duration') {
+        setFilters(prev => ({
+          ...prev,
+          duration: {
+            ...prev.duration,
+            [child]: value
+          }
+        }));
+      }
     } else {
       setFilters(prev => ({
         ...prev,
-        [field]: value
+        [field as keyof typeof prev]: value
       }));
     }
   };
@@ -313,10 +323,10 @@ export default function AdvancedSearch() {
                         </div>
                       </td>
                       <td className="py-3 px-4 text-gray-400 hidden md:table-cell">{track.artist}</td>
-                      <td className="py-3 px-4 text-gray-400 hidden lg:table-cell">{track.genre}</td>
-                      <td className="py-3 px-4 text-gray-400 text-right">{formatDuration(track.duration)}</td>
+                      <td className="py-3 px-4 text-gray-400 hidden lg:table-cell">{track.genre || 'Unknown'}</td>
+                      <td className="py-3 px-4 text-gray-400 text-right">{formatDuration(track.duration || 0)}</td>
                       <td className="py-3 px-4">
-                        <TrackCardWithMenu track={track} compact={true} />
+                        <TrackCard track={track} compact={true} />
                       </td>
                     </tr>
                   ))}

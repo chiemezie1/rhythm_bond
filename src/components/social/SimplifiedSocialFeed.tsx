@@ -92,51 +92,30 @@ export default function SimplifiedSocialFeed({ filter = 'all' }: SocialFeedProps
   }, [filter, getTrackById, getPlaylistById]);
 
   // Handle creating a new post
-  const handleCreatePost = async (content: string, mediaType?: string, mediaId?: string) => {
-    if (!isAuthenticated || !user) {
-      alert('You need to be logged in to create posts');
-      return;
-    }
-
+  const handleCreatePost = async () => {
+    // Just refresh the posts list since CreatePost handles the API call internally
     try {
-      const response = await fetch('/api/social/posts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          content,
-          mediaType,
-          mediaId,
-          visibility: 'public'
-        })
-      });
+      const response = await fetch('/api/social/posts');
+      if (response.ok) {
+        const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error('Failed to create post');
+        // Transform posts to include media data
+        const postsWithMedia = await Promise.all(
+          data.posts.map(async (post: any) => {
+            let mediaData = null;
+            if (post.mediaType === 'track' && post.mediaId) {
+              mediaData = await getTrackById(post.mediaId);
+            } else if (post.mediaType === 'playlist' && post.mediaId) {
+              mediaData = await getPlaylistById(post.mediaId);
+            }
+            return { ...post, mediaData };
+          })
+        );
+
+        setPosts(postsWithMedia);
       }
-
-      const data = await response.json();
-
-      // Add media data to the new post
-      let mediaData = null;
-      if (mediaType === 'track' && mediaId) {
-        mediaData = await getTrackById(mediaId);
-      } else if (mediaType === 'playlist' && mediaId) {
-        mediaData = await getPlaylistById(mediaId);
-      }
-
-      // Add the new post to the list
-      setPosts(prevPosts => [
-        {
-          ...data.post,
-          mediaData
-        },
-        ...prevPosts
-      ]);
     } catch (error) {
-      console.error('Error creating post:', error);
-      throw error;
+      console.error('Error refreshing posts:', error);
     }
   };
 
@@ -243,7 +222,7 @@ export default function SimplifiedSocialFeed({ filter = 'all' }: SocialFeedProps
   return (
     <div className="space-y-4">
       {/* Create post component */}
-      <CreatePost onCreatePost={handleCreatePost} />
+      <CreatePost onPostCreated={handleCreatePost} />
 
       {/* Loading state */}
       {isLoading && (

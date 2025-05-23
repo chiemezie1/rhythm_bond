@@ -31,54 +31,58 @@ export default function SharedPlaylist({
   const [userPlaylists, setUserPlaylists] = useState<UserPlaylist[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [addSuccess, setAddSuccess] = useState<string | null>(null);
-  
+
   // Handle adding the shared playlist to user's library
   const handleAddToLibrary = () => {
     if (!isAuthenticated) {
       alert('You need to be logged in to add this playlist to your library.');
       return;
     }
-    
+
     // Get user's playlists
     const playlists = getPlaylists();
     setUserPlaylists(playlists);
     setShowAddToPlaylistMenu(true);
   };
-  
+
   // Handle adding tracks to a selected playlist
   const handleAddToPlaylist = async (targetPlaylistId: string) => {
     if (!isAuthenticated || isAdding) return;
-    
+
     try {
       setIsAdding(true);
-      
+
       // Add all tracks from the shared playlist to the selected playlist
       let addedCount = 0;
       for (const track of playlist.tracks) {
-        const success = addTrackToPlaylist(targetPlaylistId, track);
-        if (success) addedCount++;
+        try {
+          const success = await addTrackToPlaylist(targetPlaylistId, track);
+          if (success) addedCount++;
+        } catch (error) {
+          console.error('Failed to add track:', error);
+        }
       }
-      
+
       setAddSuccess(`Added ${addedCount} tracks to your playlist`);
       setTimeout(() => {
         setAddSuccess(null);
         setShowAddToPlaylistMenu(false);
       }, 2000);
-      
+
       setIsAdding(false);
     } catch (error) {
       console.error('Failed to add tracks to playlist:', error);
       setIsAdding(false);
     }
   };
-  
+
   // Handle playing the playlist
   const handlePlay = () => {
     if (playlist.tracks.length > 0) {
       playTrack(playlist.tracks[0]);
     }
   };
-  
+
   return (
     <div className="bg-background-card rounded-lg p-4 shadow-md">
       {/* User who shared the playlist */}
@@ -101,12 +105,12 @@ export default function SharedPlaylist({
           <p className="text-xs text-text-tertiary">{timestamp}</p>
         </div>
       </div>
-      
+
       {/* Share message */}
       {message && (
         <p className="mb-4">{message}</p>
       )}
-      
+
       {/* Playlist Card */}
       <div className="bg-background-elevated rounded-lg overflow-hidden mb-4">
         <div className="relative aspect-video w-full">
@@ -146,14 +150,14 @@ export default function SharedPlaylist({
             </div>
           </div>
         </div>
-        
+
         {/* Playlist Tracks Preview */}
         <div className="p-4">
           <h4 className="font-medium mb-2">Tracks</h4>
           <div className="space-y-2">
             {playlist.tracks.slice(0, 3).map((track, index) => (
-              <div 
-                key={track.id} 
+              <div
+                key={track.id}
                 className="flex items-center gap-3 p-2 hover:bg-background-light rounded-md cursor-pointer"
                 onClick={() => playTrack(track)}
               >
@@ -178,7 +182,7 @@ export default function SharedPlaylist({
               </div>
             ))}
             {playlist.tracks.length > 3 && (
-              <Link 
+              <Link
                 href={`/playlist/${playlist.id}`}
                 className="block text-center text-primary hover:text-primary-light text-sm py-2"
               >
@@ -188,7 +192,7 @@ export default function SharedPlaylist({
           </div>
         </div>
       </div>
-      
+
       {/* Add to Playlist Menu */}
       {showAddToPlaylistMenu && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
@@ -196,7 +200,7 @@ export default function SharedPlaylist({
             <div className="p-4 border-b border-background-elevated">
               <h2 className="text-xl font-semibold">Add to Playlist</h2>
             </div>
-            
+
             <div className="p-4">
               {addSuccess ? (
                 <div className="text-center py-8">
@@ -210,7 +214,7 @@ export default function SharedPlaylist({
                   {userPlaylists.length === 0 ? (
                     <div className="text-center py-8">
                       <p className="text-text-secondary mb-4">You don't have any playlists yet.</p>
-                      <Link 
+                      <Link
                         href="/library"
                         className="bg-primary hover:bg-primary-light text-white px-4 py-2 rounded-md font-medium"
                         onClick={() => setShowAddToPlaylistMenu(false)}
@@ -254,7 +258,7 @@ export default function SharedPlaylist({
                 </>
               )}
             </div>
-            
+
             <div className="p-4 border-t border-background-elevated flex justify-end">
               <button
                 className="px-4 py-2 text-text-secondary hover:text-white"

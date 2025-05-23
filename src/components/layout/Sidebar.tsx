@@ -497,7 +497,7 @@ export default function Sidebar() {
           <div className="mt-1 ml-2 flex flex-col gap-1">
             {userGenres.map((item) => (
               <Link
-                key={item.id || item.name}
+                key={item.name}
                 href={item.path}
                 className={`px-3 py-1.5 rounded-lg text-xs transition-colors ${
                   isActive(item.path) ? "bg-dark-lightest text-white" : "text-gray-300 hover:bg-dark-lightest"

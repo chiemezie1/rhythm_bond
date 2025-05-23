@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Layout from "@/components/layout/Layout";
 import UserProfile from "@/components/user/UserProfile";
 import { useAuth } from '@/hooks/useAuth';
@@ -32,7 +33,25 @@ export default function ProfilePage() {
   return (
     <ProtectedRoute>
       <Layout>
-        <UserProfile />
+        <div className="container mx-auto px-4 py-8">
+          {/* Breadcrumb Navigation */}
+          <div className="mb-6">
+            <nav className="flex items-center space-x-2 text-sm">
+              <Link
+                href="/"
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                Dashboard
+              </Link>
+              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              <span className="text-white">Profile</span>
+            </nav>
+          </div>
+
+          <UserProfile />
+        </div>
       </Layout>
     </ProtectedRoute>
   );
