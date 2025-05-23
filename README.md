@@ -70,14 +70,14 @@ We believe music is a social magnet that builds empathy, trust, and a sense of b
    DATABASE_URL=mysql://username:password@localhost:3306/rhythm_bond
    NEXTAUTH_SECRET=your-secret-key
    NEXTAUTH_URL=http://localhost:3000
-   
+   ```
    `or`
 
    ```bash
    cp .env.example .env.local
    ```
    And update the Database URL
-   
+
 4. **Database Setup**
    ```bash
    npx prisma generate
