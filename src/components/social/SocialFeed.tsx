@@ -450,28 +450,28 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
       {/* Social Posts - Use real data if available, otherwise fallback to mock data */}
       <div className="space-y-6">
         {/* Real social posts from the API */}
-        {socialPosts.map((post) => (
+        {socialPosts.map((post: any) => (
           <div key={post.id} className="animate-fade-in bg-background-elevated rounded-lg p-4 shadow-md">
             {/* User info and timestamp */}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
-                <Link href={`/user/${post.user.username || post.user.id}`} className="relative w-10 h-10 rounded-full overflow-hidden">
+                <Link href={`/user/${post.user?.username || post.user?.id || 'unknown'}`} className="relative w-10 h-10 rounded-full overflow-hidden">
                   <Image
-                    src={post.user.image || '/images/logo.png'}
-                    alt={post.user.name || 'User'}
+                    src={post.user?.image || '/images/logo.png'}
+                    alt={post.user?.name || 'User'}
                     fill
                     className="object-cover"
                   />
                 </Link>
                 <div>
-                  <Link href={`/user/${post.user.username || post.user.id}`} className="font-medium hover:underline">
-                    {post.user.name || 'User'}
+                  <Link href={`/user/${post.user?.username || post.user?.id || 'unknown'}`} className="font-medium hover:underline">
+                    {post.user?.name || 'User'}
                   </Link>
-                  <p className="text-xs text-text-tertiary">@{post.user.username || post.user.id}</p>
+                  <p className="text-xs text-text-tertiary">@{post.user?.username || post.user?.id || 'unknown'}</p>
                 </div>
               </div>
               <span className="text-xs text-text-tertiary">
-                {new Date(post.createdAt).toLocaleDateString(undefined, {
+                {new Date(post.createdAt || Date.now()).toLocaleDateString(undefined, {
                   year: 'numeric',
                   month: 'short',
                   day: 'numeric',
@@ -491,13 +491,13 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
                     name: 'Shared Playlist',
                     description: post.content,
                     tracks: [],
-                    createdAt: post.createdAt,
-                    updatedAt: post.createdAt
+                    createdAt: post.createdAt || new Date().toISOString(),
+                    updatedAt: post.createdAt || new Date().toISOString()
                   }}
-                  userId={post.userId}
-                  username={post.user.username || post.user.id}
-                  userAvatar={post.user.image || '/images/logo.png'}
-                  timestamp={new Date(post.createdAt).toLocaleDateString()}
+                  userId={post.userId || ''}
+                  username={post.user?.username || post.user?.id || 'unknown'}
+                  userAvatar={post.user?.image || '/images/logo.png'}
+                  timestamp={new Date(post.createdAt || Date.now()).toLocaleDateString()}
                   message={post.content}
                 />
               )}
@@ -531,34 +531,34 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
             <div className="flex items-center gap-4">
               <button
                 className={`flex items-center gap-1 ${
-                  post.likes.some(like => like.userId === user?.id)
+                  (post.likes || []).some((like: any) => like.userId === user?.id)
                     ? 'text-primary'
                     : 'text-text-secondary hover:text-primary'
                 } transition-colors`}
-                onClick={() => likePost(post.id)}
+                onClick={() => likePost(post.id.toString())}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
-                <span>{post.likes.length}</span>
+                <span>{(post.likes || []).length}</span>
               </button>
               <button
                 className="flex items-center gap-1 text-text-secondary hover:text-primary transition-colors"
                 onClick={() => {
                   const comment = prompt('Enter your comment:');
                   if (comment) {
-                    commentPost(post.id, comment);
+                    commentPost(post.id.toString(), comment);
                   }
                 }}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
-                <span>{post.comments.length}</span>
+                <span>{(post.comments || []).length}</span>
               </button>
               <button
                 className="flex items-center gap-1 text-text-secondary hover:text-primary transition-colors ml-auto"
-                onClick={() => sharePost(post.id)}
+                onClick={() => sharePost(post.id.toString())}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -568,25 +568,25 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
             </div>
 
             {/* Comments */}
-            {post.comments.length > 0 && (
+            {(post.comments || []).length > 0 && (
               <div className="mt-4 pt-4 border-t border-background-dark">
                 <h4 className="text-sm font-medium mb-2">Comments</h4>
                 <div className="space-y-3">
-                  {post.comments.slice(0, 3).map(comment => (
+                  {(post.comments || []).slice(0, 3).map((comment: any) => (
                     <div key={comment.id} className="flex gap-2">
                       <div className="relative w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
                         <Image
-                          src={comment.user.image || '/images/logo.png'}
-                          alt={comment.user.name || 'User'}
+                          src={comment.user?.image || '/images/logo.png'}
+                          alt={comment.user?.name || 'User'}
                           fill
                           className="object-cover"
                         />
                       </div>
                       <div className="flex-1 bg-background-dark rounded-lg p-2">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-sm">{comment.user.name || 'User'}</span>
+                          <span className="font-medium text-sm">{comment.user?.name || 'User'}</span>
                           <span className="text-xs text-text-tertiary">
-                            {new Date(comment.createdAt).toLocaleDateString()}
+                            {new Date(comment.createdAt || Date.now()).toLocaleDateString()}
                           </span>
                         </div>
                         <p className="text-sm">{comment.content}</p>
@@ -594,9 +594,9 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
                     </div>
                   ))}
 
-                  {post.comments.length > 3 && (
+                  {(post.comments || []).length > 3 && (
                     <button className="text-sm text-primary hover:underline">
-                      View all {post.comments.length} comments
+                      View all {(post.comments || []).length} comments
                     </button>
                   )}
                 </div>
@@ -634,7 +634,7 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
               <div className="flex items-center gap-3 bg-background-dark rounded-lg p-3 mb-3">
                 <div className="relative w-12 h-12 rounded overflow-hidden flex-shrink-0">
                   <Image
-                    src={item.content.coverUrl}
+                    src={item.content.coverUrl || '/images/logo.png'}
                     alt={`${item.content.track} by ${item.content.artist}`}
                     fill
                     className="object-cover"
@@ -650,12 +650,12 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
                     // Create a mock track to play
                     const mockTrack = {
                       id: `track-${Date.now()}`,
-                      title: item.content.track,
-                      artist: item.content.artist,
+                      title: item.content.track || 'Unknown Track',
+                      artist: item.content.artist || 'Unknown Artist',
                       genre: 'Unknown',
                       youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
                       youtubeId: 'dQw4w9WgXcQ',
-                      thumbnail: item.content.coverUrl
+                      thumbnail: item.content.coverUrl || '/images/logo.png'
                     };
                     playTrack(mockTrack);
                   }}
@@ -674,8 +674,8 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
                 </p>
                 <div className="relative w-full h-32 rounded-lg overflow-hidden">
                   <Image
-                    src={item.content.coverUrl}
-                    alt={item.content.playlist}
+                    src={item.content.coverUrl || '/images/logo.png'}
+                    alt={item.content.playlist || 'Playlist'}
                     fill
                     className="object-cover"
                   />
@@ -704,7 +704,7 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
             <div className="flex items-center gap-4">
               <button
                 className="flex items-center gap-1 text-text-secondary hover:text-primary transition-colors"
-                onClick={() => likePost(item.id)}
+                onClick={() => likePost(item.id.toString())}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -713,7 +713,12 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
               </button>
               <button
                 className="flex items-center gap-1 text-text-secondary hover:text-primary transition-colors"
-                onClick={() => commentPost(item.id)}
+                onClick={() => {
+                  const comment = prompt('Enter your comment:');
+                  if (comment) {
+                    commentPost(item.id.toString(), comment);
+                  }
+                }}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -722,7 +727,7 @@ export default function SocialFeed({ userId, filter = 'all' }: SocialFeedProps) 
               </button>
               <button
                 className="flex items-center gap-1 text-text-secondary hover:text-primary transition-colors ml-auto"
-                onClick={() => sharePost(item.id)}
+                onClick={() => sharePost(item.id.toString())}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />

@@ -69,6 +69,11 @@ async function main() {
   console.log('Created user data (recently played, favorites, etc.)');
 
   console.log('Database seeding completed successfully!');
+  console.log('Example Users');
+  console.log('👨 Email: john@example.com');
+  console.log('Password: password123');
+  console.log('👩 Email: jane@example.com');
+  console.log('Password: password123');
 }
 
 async function createUsers() {
@@ -172,7 +177,12 @@ async function createPlaylists(users: any[], tracks: any[]) {
       const { tracks: playlistTracks, ...playlistInfo } = playlistData;
 
       const playlist = await prisma.playlist.create({
-        data: playlistInfo,
+        data: {
+          ...playlistInfo,
+          isTemplate: playlistInfo.isPublic, // Public playlists can be templates
+          shareCount: Math.floor(Math.random() * 10), // Random share count for demo
+          tags: JSON.stringify(['music', 'curated', playlistInfo.name.toLowerCase().replace(/\s+/g, '-')])
+        },
       });
 
       // Add tracks to playlist
@@ -417,7 +427,11 @@ async function createUserData(users: any[], tracks: any[]) {
             color: genre.color,
             coverImage: genre.coverImage,
             order: genre.order,
-            userId: user.id
+            userId: user.id,
+            isTemplate: true, // Mark default genres as templates
+            isPublic: true,
+            shareCount: 0,
+            tags: JSON.stringify(['default', 'template', genre.name.toLowerCase().replace(/\s+/g, '-')])
           }
         });
         createdGenreIds.push(newGenre.id);

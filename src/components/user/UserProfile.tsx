@@ -388,8 +388,8 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
           {/* Profile Picture */}
           <div className="relative w-24 h-24 rounded-full overflow-hidden border-4 border-primary/20 flex-shrink-0">
             <Image
-              src={userData.profilePic}
-              alt={userData.name}
+              src={(userData as any).profilePic || '/images/logo.png'}
+              alt={(userData as any).name || 'User'}
               fill
               className="object-cover"
             />
@@ -399,25 +399,25 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
               <div>
-                <h1 className="text-3xl font-bold text-white mb-1">{userData.name}</h1>
-                <p className="text-gray-400">@{userData.username}</p>
+                <h1 className="text-3xl font-bold text-white mb-1">{(userData as any).name || 'User'}</h1>
+                <p className="text-gray-400">@{(userData as any).username || 'user'}</p>
                 <div className="flex items-center gap-4 mt-2 text-sm">
                   <button
                     className="hover:text-white transition-colors"
                     onClick={() => setActiveTab('followers')}
                   >
-                    <span className="font-bold text-white">{userData.followersCount}</span>
+                    <span className="font-bold text-white">{(userData as any).followersCount || 0}</span>
                     <span className="text-gray-400 ml-1">Followers</span>
                   </button>
                   <button
                     className="hover:text-white transition-colors"
                     onClick={() => setActiveTab('following')}
                   >
-                    <span className="font-bold text-white">{userData.followingCount}</span>
+                    <span className="font-bold text-white">{(userData as any).followingCount || 0}</span>
                     <span className="text-gray-400 ml-1">Following</span>
                   </button>
                 </div>
-                <p className="text-gray-500 text-sm mt-1">Joined {userData.joinDate}</p>
+                <p className="text-gray-500 text-sm mt-1">Joined {(userData as any).joinDate || 'Recently'}</p>
               </div>
 
               {/* Action Button */}
@@ -432,16 +432,16 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
             </div>
 
             {/* Bio */}
-            <p className="text-gray-300 max-w-2xl">{userData.bio}</p>
+            <p className="text-gray-300 max-w-2xl">{(userData as any).bio || 'No bio available'}</p>
           </div>
         </div>
       </div>
 
       {/* Fix Username Alert - Only show for current user with problematic username */}
-      {isCurrentUser && userData.username && (
-        userData.username.startsWith('user_') ||
-        userData.username.length > 20 ||
-        /^[a-f0-9]{20,}$/.test(userData.username) // Matches long hex-like strings
+      {isCurrentUser && (userData as any).username && (
+        (userData as any).username.startsWith('user_') ||
+        (userData as any).username.length > 20 ||
+        /^[a-f0-9]{20,}$/.test((userData as any).username) // Matches long hex-like strings
       ) && (
         <FixUsernameButton />
       )}
@@ -467,7 +467,7 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
             }`}
             onClick={() => setActiveTab('playlists')}
           >
-            Playlists ({userData.playlists.length})
+            Playlists ({(userData as any).playlists?.length || 0})
           </button>
           <button
             className={`px-6 py-3 border-b-2 font-medium transition-colors ${
@@ -477,7 +477,7 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
             }`}
             onClick={() => setActiveTab('favorites')}
           >
-            Favorites ({userData.favorites.length})
+            Favorites ({(userData as any).favorites?.length || 0})
           </button>
           <button
             className={`px-6 py-3 border-b-2 font-medium transition-colors ${
@@ -487,7 +487,7 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
             }`}
             onClick={() => setActiveTab('tags')}
           >
-            Tags ({userData.tags.length})
+            Tags ({(userData as any).tags?.length || 0})
           </button>
           <button
             className={`px-6 py-3 border-b-2 font-medium transition-colors ${
@@ -497,7 +497,7 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
             }`}
             onClick={() => setActiveTab('genres')}
           >
-            Genres ({userData.genres.length})
+            Genres ({(userData as any).genres?.length || 0})
           </button>
           <button
             className={`px-6 py-3 border-b-2 font-medium transition-colors ${
@@ -507,7 +507,7 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
             }`}
             onClick={() => setActiveTab('followers')}
           >
-            Followers ({userData.followersCount})
+            Followers ({(userData as any).followersCount || 0})
           </button>
           <button
             className={`px-6 py-3 border-b-2 font-medium transition-colors ${
@@ -517,7 +517,7 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
             }`}
             onClick={() => setActiveTab('following')}
           >
-            Following ({userData.followingCount})
+            Following ({(userData as any).followingCount || 0})
           </button>
         </div>
       </div>
@@ -529,19 +529,19 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-dark-lighter/50 rounded-xl p-6 text-center border border-dark-lightest/30">
               <h3 className="text-gray-400 text-sm mb-2">Playlists</h3>
-              <p className="text-3xl font-bold text-primary">{userData.playlists.length}</p>
+              <p className="text-3xl font-bold text-primary">{(userData as any).playlists?.length || 0}</p>
             </div>
             <div className="bg-dark-lighter/50 rounded-xl p-6 text-center border border-dark-lightest/30">
               <h3 className="text-gray-400 text-sm mb-2">Favorites</h3>
-              <p className="text-3xl font-bold text-primary">{userData.favorites.length}</p>
+              <p className="text-3xl font-bold text-primary">{(userData as any).favorites?.length || 0}</p>
             </div>
             <div className="bg-dark-lighter/50 rounded-xl p-6 text-center border border-dark-lightest/30">
               <h3 className="text-gray-400 text-sm mb-2">Tags</h3>
-              <p className="text-3xl font-bold text-primary">{userData.tags.length}</p>
+              <p className="text-3xl font-bold text-primary">{(userData as any).tags?.length || 0}</p>
             </div>
             <div className="bg-dark-lighter/50 rounded-xl p-6 text-center border border-dark-lightest/30">
               <h3 className="text-gray-400 text-sm mb-2">Genres</h3>
-              <p className="text-3xl font-bold text-primary">{userData.genres.length}</p>
+              <p className="text-3xl font-bold text-primary">{(userData as any).genres?.length || 0}</p>
             </div>
           </div>
         )}
@@ -550,7 +550,7 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
         {activeTab === 'playlists' && (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">{isCurrentUser ? 'Your' : `${userData.name}'s`} Playlists</h2>
+              <h2 className="text-2xl font-bold">{isCurrentUser ? 'Your' : `${(userData as any).name || 'User'}'s`} Playlists</h2>
               {isCurrentUser && (
                 <Link href="/library" className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg">
                   Create Playlist
@@ -558,8 +558,8 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
               )}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {userData.playlists.length > 0 ? (
-                userData.playlists.map((playlist) => (
+              {((userData as any).playlists?.length || 0) > 0 ? (
+                ((userData as any).playlists || []).map((playlist: any) => (
                   <Link
                     key={playlist.id}
                     href={`/playlist/${playlist.id}`}
@@ -606,8 +606,8 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
           <div>
             <h2 className="text-2xl font-bold mb-6">Favorite Tracks</h2>
             <div className="space-y-3">
-              {userData.favorites.length > 0 ? (
-                userData.favorites.map((track) => (
+              {((userData as any).favorites?.length || 0) > 0 ? (
+                ((userData as any).favorites || []).map((track: any) => (
                   <div
                     key={track.id}
                     className="flex items-center gap-4 p-4 bg-dark-lighter/50 rounded-xl hover:bg-dark-lighter transition-colors border border-dark-lightest/30"
@@ -643,8 +643,8 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
           <div>
             <h2 className="text-2xl font-bold mb-6">Music Tags</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {userData.tags.length > 0 ? (
-                userData.tags.map((tag) => (
+              {((userData as any).tags?.length || 0) > 0 ? (
+                ((userData as any).tags || []).map((tag: any) => (
                   <Link
                     key={tag.id}
                     href={`/tags`}
@@ -677,8 +677,8 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
           <div>
             <h2 className="text-2xl font-bold mb-6">Music Genres</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {userData.genres.length > 0 ? (
-                userData.genres.map((genre) => (
+              {((userData as any).genres?.length || 0) > 0 ? (
+                ((userData as any).genres || []).map((genre: any) => (
                   <Link
                     key={genre.id}
                     href={`/genre/${genre.id}`}

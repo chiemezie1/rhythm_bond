@@ -88,7 +88,7 @@ export default function TrackMenu({ track, onClose, position, onRemove }: TrackM
   // Load genres once when component mounts
   useEffect(() => {
     if (isAuthenticated && genres.length === 0) {
-      setGenres(getGenres());
+      getGenres().then(setGenres);
     }
   }, [isAuthenticated, getGenres, genres.length]);
 
@@ -176,7 +176,7 @@ export default function TrackMenu({ track, onClose, position, onRemove }: TrackM
     }
 
     // Always get the latest genres
-    setGenres(getGenres());
+    getGenres().then(setGenres);
 
     // In a real implementation, we would get the track's genres
     // For now, we'll just use an empty array if we don't have any
@@ -290,10 +290,10 @@ export default function TrackMenu({ track, onClose, position, onRemove }: TrackM
   };
 
   // Add genre to track
-  const handleAddGenre = (genreId: string) => {
+  const handleAddGenre = async (genreId: string) => {
     if (!isAuthenticated) return;
 
-    const success = addTrackToGenre(genreId, track.id);
+    const success = await addTrackToGenre(genreId, track.id);
     if (success) {
       // Find the genre name for better feedback
       const genre = genres.find(g => g.id === genreId);
@@ -307,10 +307,10 @@ export default function TrackMenu({ track, onClose, position, onRemove }: TrackM
   };
 
   // Remove genre from track
-  const handleRemoveGenre = (genreId: string) => {
+  const handleRemoveGenre = async (genreId: string) => {
     if (!isAuthenticated) return;
 
-    const success = removeTrackFromGenre(genreId, track.id);
+    const success = await removeTrackFromGenre(genreId, track.id);
     if (success) {
       // Find the genre name for better feedback
       const genre = genres.find(g => g.id === genreId);
@@ -322,19 +322,21 @@ export default function TrackMenu({ track, onClose, position, onRemove }: TrackM
   };
 
   // Create new genre
-  const handleCreateGenre = () => {
+  const handleCreateGenre = async () => {
     if (!newGenreName.trim() || !isAuthenticated) return;
 
-    const newGenre = createGenre(newGenreName, newGenreColor);
-    setGenres([...genres, newGenre]);
-    const success = addTrackToGenre(newGenre.id, track.id);
+    const newGenre = await createGenre(newGenreName, newGenreColor);
+    if (newGenre) {
+      setGenres([...genres, newGenre]);
+      const success = await addTrackToGenre(newGenre.id, track.id);
 
-    if (success) {
-      alert(`Created genre "${newGenreName}" and added "${track.title}" to it`);
-      setTrackGenres([...trackGenres, newGenre]);
-      setNewGenreName('');
-      setShowGenresMenu(false);
-      onClose(); // Close the main menu after successful action
+      if (success) {
+        alert(`Created genre "${newGenreName}" and added "${track.title}" to it`);
+        setTrackGenres([...trackGenres, newGenre]);
+        setNewGenreName('');
+        setShowGenresMenu(false);
+        onClose(); // Close the main menu after successful action
+      }
     }
   };
 

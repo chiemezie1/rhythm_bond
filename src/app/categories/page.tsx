@@ -35,10 +35,12 @@ export default function CategoriesPage() {
       try {
         setIsLoading(true);
         const userGenres = await getGenres();
-        setGenres(userGenres);
+        // Ensure userGenres is an array
+        setGenres(Array.isArray(userGenres) ? userGenres : []);
         setIsLoading(false);
       } catch (error) {
         console.error('Error loading genres:', error);
+        setGenres([]); // Set empty array on error
         setIsLoading(false);
       }
     };
@@ -56,7 +58,7 @@ export default function CategoriesPage() {
       const newGenre = await createGenre(name, color, description);
 
       if (newGenre) {
-        setGenres([...genres, newGenre]);
+        setGenres([...(Array.isArray(genres) ? genres : []), newGenre]);
         setName('');
         setDescription('');
         setColor('#3b82f6');
@@ -81,7 +83,7 @@ export default function CategoriesPage() {
       });
 
       if (updatedGenre) {
-        setGenres(genres.map(g => g.id === updatedGenre.id ? updatedGenre : g));
+        setGenres((Array.isArray(genres) ? genres : []).map(g => g.id === updatedGenre.id ? updatedGenre : g));
         setEditingGenre(null);
       }
     } catch (error) {
@@ -96,7 +98,7 @@ export default function CategoriesPage() {
         const success = await deleteGenre(genreId);
 
         if (success) {
-          setGenres(genres.filter(g => g.id !== genreId));
+          setGenres((Array.isArray(genres) ? genres : []).filter(g => g.id !== genreId));
         }
       } catch (error) {
         console.error('Error deleting genre:', error);
@@ -294,7 +296,7 @@ export default function CategoriesPage() {
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
-        ) : genres.length === 0 ? (
+        ) : (Array.isArray(genres) ? genres : []).length === 0 ? (
           <div className="bg-dark-lighter rounded-xl p-8 text-center">
             <p className="text-gray-400 mb-4">You haven't created any genres yet.</p>
             <button
@@ -306,7 +308,7 @@ export default function CategoriesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {genres.map((genre, index) => (
+            {(Array.isArray(genres) ? genres : []).map((genre, index) => (
               <div key={genre.id} className="bg-dark-lighter rounded-xl overflow-hidden">
                 <div className="relative aspect-video">
                   {genre.coverImage ? (

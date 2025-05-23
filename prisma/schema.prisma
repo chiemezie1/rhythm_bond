@@ -40,6 +40,10 @@ model User {
   comments      Comment[]
   likes         Like[]
   commentLikes  CommentLike[]
+  genresShared  GenreShare[] @relation("GenreSharedBy")
+  genresReceived GenreShare[] @relation("GenreSharedTo")
+  playlistsShared PlaylistShare[] @relation("PlaylistSharedBy")
+  playlistsReceived PlaylistShare[] @relation("PlaylistSharedTo")
 }
 
 // NextAuth.js models
@@ -107,11 +111,21 @@ model Playlist {
   coverImage  String?
   isPublic    Boolean   @default(true)
   userId      String
+
+  // Enhanced sharing and discovery fields
+  isTemplate  Boolean   @default(false)  // If true, this is a template others can copy
+  sourcePlaylistId String? // If copied from another playlist, reference to original
+  shareCount  Int       @default(0)      // How many times this playlist has been shared/copied
+  tags        String?   @db.Text         // JSON array of tags for better discovery
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourcePlaylist Playlist? @relation("PlaylistSource", fields: [sourcePlaylistId], references: [id])
+  copiedPlaylists Playlist[] @relation("PlaylistSource")
   tracks      PlaylistTrack[]
+  shares      PlaylistShare[]
 }
 
 model PlaylistTrack {
@@ -125,6 +139,25 @@ model PlaylistTrack {
   track       Track     @relation(fields: [trackId], references: [id], onDelete: Cascade)
 
   @@unique([playlistId, trackId])
+}
+
+// Playlist sharing/copying tracking
+model PlaylistShare {
+  id          String    @id @default(cuid())
+  playlistId  String    // The playlist being shared
+  sharedById  String    // User who shared it
+  sharedToId  String?   // User who received it (null for public shares)
+  shareType   String    @default("copy") // "copy", "reference", "template"
+  message     String?   @db.Text // Optional message when sharing
+  createdAt   DateTime  @default(now())
+
+  playlist    Playlist  @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  sharedBy    User      @relation("PlaylistSharedBy", fields: [sharedById], references: [id], onDelete: Cascade)
+  sharedTo    User?     @relation("PlaylistSharedTo", fields: [sharedToId], references: [id], onDelete: Cascade)
+
+  @@index([playlistId])
+  @@index([sharedById])
+  @@index([sharedToId])
 }
 
 model Favorite {
@@ -207,7 +240,7 @@ model Post {
   id          String    @id @default(cuid())
   content     String?   @db.Text
   userId      String
-  mediaType   String?   // track, playlist, etc.
+  mediaType   String?   // track, playlist, genre, etc.
   mediaId     String?
   visibility  String    @default("public") // public, followers, private
   createdAt   DateTime  @default(now())
@@ -265,11 +298,21 @@ model Genre {
   isPublic    Boolean   @default(true)
   userId      String
   order       Int       @default(0)
+
+  // Enhanced sharing and discovery fields
+  isTemplate  Boolean   @default(false)  // If true, this is a template others can copy
+  sourceGenreId String? // If copied from another genre, reference to original
+  shareCount  Int       @default(0)      // How many times this genre has been shared/copied
+  tags        String?   @db.Text         // JSON array of tags for better discovery
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceGenre Genre?    @relation("GenreSource", fields: [sourceGenreId], references: [id])
+  copiedGenres Genre[]  @relation("GenreSource")
   tracks      GenreTrack[]
+  shares      GenreShare[]
 
   @@unique([userId, name])
 }
@@ -285,6 +328,25 @@ model GenreTrack {
   track     Track     @relation(fields: [trackId], references: [id], onDelete: Cascade)
 
   @@unique([genreId, trackId])
+}
+
+// Genre sharing/copying tracking
+model GenreShare {
+  id          String    @id @default(cuid())
+  genreId     String    // The genre being shared
+  sharedById  String    // User who shared it
+  sharedToId  String?   // User who received it (null for public shares)
+  shareType   String    @default("copy") // "copy", "reference", "template"
+  message     String?   @db.Text // Optional message when sharing
+  createdAt   DateTime  @default(now())
+
+  genre       Genre     @relation(fields: [genreId], references: [id], onDelete: Cascade)
+  sharedBy    User      @relation("GenreSharedBy", fields: [sharedById], references: [id], onDelete: Cascade)
+  sharedTo    User?     @relation("GenreSharedTo", fields: [sharedToId], references: [id], onDelete: Cascade)
+
+  @@index([genreId])
+  @@index([sharedById])
+  @@index([sharedToId])
 }
 
 // User's home page layout preferences

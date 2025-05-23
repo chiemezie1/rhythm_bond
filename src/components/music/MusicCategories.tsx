@@ -91,7 +91,7 @@ export default function MusicCategories() {
         // Ensure genres is always an array
         const genres = Array.isArray(genresResponse)
           ? genresResponse
-          : (genresResponse?.genres || []);
+          : ((genresResponse as any)?.genres || []);
 
         console.log('Processed genres array:', genres);
 

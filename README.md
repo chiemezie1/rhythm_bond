@@ -42,7 +42,7 @@ We believe music is a social magnet that builds empathy, trust, and a sense of b
 
 ## 🎬 Demo Video
 
-[![Video](https://img.youtube.com/vi/6YDZ0gWszqg/maxresdefault.jpg)](https://youtu.be/6YDZ0gWszqg)
+[![Video](https://img.youtube.com/vi/M3xYfDrXIMQ/maxresdefault.jpg)](https://youtu.be/M3xYfDrXIMQ)
 
 ## 🛠️ Installation Instructions
 
@@ -73,6 +73,7 @@ We believe music is a social magnet that builds empathy, trust, and a sense of b
 4. **Database Setup**
    ```bash
    npx prisma generate
+   npx prisma migrate dev --name init
    npx prisma db push
    npx prisma db seed
    ```

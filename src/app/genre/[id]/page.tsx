@@ -23,7 +23,7 @@ export default function GenrePage({ params: serverParams }: { params: { id: stri
   const genreId = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : '';
 
   const { isAuthenticated } = useAuth();
-  const { getGenreById, getTracksByGenre, searchTracks, addTrackToGenre, removeTrackFromGenre, getAllTracks } = useMusic();
+  const { getGenreById, getTracksByGenre, searchTracks, addTrackToGenre, removeTrackFromGenre, getAllTracks, playTrack } = useMusic();
 
   const [genre, setGenre] = useState<any>(null);
   const [tracks, setTracks] = useState<any[]>([]);
@@ -397,16 +397,30 @@ export default function GenrePage({ params: serverParams }: { params: { id: stri
                               )}
                             </div>
 
-                            {/* Add Button */}
-                            <button
-                              className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 group-hover:scale-105"
-                              onClick={() => handleAddTrack(track.id)}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                              </svg>
-                              Add to Genre
-                            </button>
+                            {/* Action Buttons */}
+                            <div className="flex items-center gap-2">
+                              {/* Play Button */}
+                              <button
+                                className="w-8 h-8 bg-green-600 hover:bg-green-700 rounded-full flex items-center justify-center transition-colors"
+                                onClick={() => playTrack(track)}
+                                title="Play track"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M8 5v14l11-7z"/>
+                                </svg>
+                              </button>
+
+                              {/* Add Button */}
+                              <button
+                                className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 group-hover:scale-105"
+                                onClick={() => handleAddTrack(track.id)}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Add to Genre
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -485,16 +499,30 @@ export default function GenrePage({ params: serverParams }: { params: { id: stri
                                 )}
                               </div>
 
-                              {/* Add Button */}
-                              <button
-                                className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 group-hover:scale-105"
-                                onClick={() => handleAddTrack(track.id)}
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                                Add to Genre
-                              </button>
+                              {/* Action Buttons */}
+                              <div className="flex items-center gap-2">
+                                {/* Play Button */}
+                                <button
+                                  className="w-8 h-8 bg-green-600 hover:bg-green-700 rounded-full flex items-center justify-center transition-colors"
+                                  onClick={() => playTrack(track)}
+                                  title="Play track"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                  </svg>
+                                </button>
+
+                                {/* Add Button */}
+                                <button
+                                  className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 group-hover:scale-105"
+                                  onClick={() => handleAddTrack(track.id)}
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                  </svg>
+                                  Add to Genre
+                                </button>
+                              </div>
                             </div>
                           </div>
                         ))
@@ -608,10 +636,7 @@ export default function GenrePage({ params: serverParams }: { params: { id: stri
                           {/* Play Button */}
                           <button
                             className="w-8 h-8 bg-primary hover:bg-primary-dark rounded-full flex items-center justify-center transition-colors"
-                            onClick={() => {
-                              // Add play functionality here if needed
-                              console.log('Play track:', track);
-                            }}
+                            onClick={() => playTrack(track)}
                             title="Play track"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">

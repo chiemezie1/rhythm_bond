@@ -3,25 +3,18 @@
 import { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import Image from 'next/image';
-import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
-// Define settings categories
+// Define settings categories - simplified to only implemented features
 const settingsCategories = [
   { id: 'account', name: 'Account', icon: 'user' },
-  { id: 'profile', name: 'Profile', icon: 'profile' },
-  { id: 'privacy', name: 'Privacy', icon: 'lock' },
-  { id: 'notifications', name: 'Notifications', icon: 'bell' },
-  { id: 'playback', name: 'Playback', icon: 'music' },
-  { id: 'devices', name: 'Devices', icon: 'device' },
-  { id: 'social', name: 'Social', icon: 'social' },
   { id: 'appearance', name: 'Appearance', icon: 'appearance' },
-  { id: 'language', name: 'Language & Region', icon: 'globe' },
-  { id: 'accessibility', name: 'Accessibility', icon: 'accessibility' },
   { id: 'about', name: 'About', icon: 'info' },
 ];
 
 export default function SettingsPage() {
   const [activeCategory, setActiveCategory] = useState('account');
+  const { data: session } = useSession();
 
   return (
     <Layout>
@@ -55,16 +48,8 @@ export default function SettingsPage() {
           {/* Settings Content */}
           <div className="md:col-span-3">
             <div className="bg-dark-lighter rounded-xl p-6">
-              {activeCategory === 'account' && <AccountSettings />}
-              {activeCategory === 'profile' && <ProfileSettings />}
-              {activeCategory === 'privacy' && <PrivacySettings />}
-              {activeCategory === 'notifications' && <NotificationSettings />}
-              {activeCategory === 'playback' && <PlaybackSettings />}
-              {activeCategory === 'devices' && <DevicesSettings />}
-              {activeCategory === 'social' && <SocialSettings />}
+              {activeCategory === 'account' && <AccountSettings session={session} />}
               {activeCategory === 'appearance' && <AppearanceSettings />}
-              {activeCategory === 'language' && <LanguageSettings />}
-              {activeCategory === 'accessibility' && <AccessibilitySettings />}
               {activeCategory === 'about' && <AboutSettings />}
             </div>
           </div>
@@ -85,59 +70,10 @@ function SettingsIcon({ name, active }: { name: string; active: boolean }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
         </svg>
       );
-    case 'profile':
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${activeClass}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      );
-    case 'lock':
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${activeClass}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-        </svg>
-      );
-    case 'bell':
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${activeClass}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-        </svg>
-      );
-    case 'music':
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${activeClass}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-        </svg>
-      );
-    case 'device':
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${activeClass}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      );
-    case 'social':
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${activeClass}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-      );
     case 'appearance':
       return (
         <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${activeClass}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-        </svg>
-      );
-    case 'globe':
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${activeClass}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      );
-    case 'accessibility':
-      return (
-        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${activeClass}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
         </svg>
       );
     case 'info':
@@ -156,17 +92,16 @@ function SettingsIcon({ name, active }: { name: string; active: boolean }) {
   }
 }
 
-// Account Settings Component
-function AccountSettings() {
+// Settings Components
+function AccountSettings({ session }: { session: any }) {
   return (
     <div>
       <h2 className="text-2xl font-bold mb-6">Account Settings</h2>
-
       <div className="space-y-6">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-20 h-20 rounded-full overflow-hidden bg-dark-lightest">
             <Image
-              src="/images/logo.png"
+              src={session?.user?.image || '/images/logo.png'}
               alt="Profile Picture"
               width={80}
               height={80}
@@ -174,63 +109,169 @@ function AccountSettings() {
             />
           </div>
           <div>
-            <h3 className="font-bold text-lg">John Doe</h3>
-            <p className="text-gray-400">@johndoe</p>
-            <button className="text-primary hover:underline text-sm mt-1">Change profile picture</button>
+            <h3 className="font-bold text-lg">{session?.user?.name || 'User'}</h3>
+            <p className="text-gray-400">@{session?.user?.email?.split('@')[0] || 'user'}</p>
+            <p className="text-sm text-gray-500 mt-1">Profile picture managed by your OAuth provider</p>
           </div>
         </div>
-
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-1">Email</label>
             <input
               type="email"
-              value="john.doe@example.com"
+              value={session?.user?.email || 'Not available'}
               className="w-full bg-dark rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-primary"
               readOnly
             />
+            <p className="text-xs text-gray-500 mt-1">Email is managed by your OAuth provider</p>
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Username</label>
+            <label className="block text-sm font-medium text-gray-400 mb-1">Name</label>
             <input
               type="text"
-              value="johndoe"
+              value={session?.user?.name || 'Not available'}
               className="w-full bg-dark rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-primary"
               readOnly
             />
+            <p className="text-xs text-gray-500 mt-1">Name is managed by your OAuth provider</p>
           </div>
-
           <div className="pt-4">
-            <button className="text-white bg-primary hover:bg-primary-dark px-4 py-2 rounded-lg font-medium transition-colors">
-              Change Password
-            </button>
-          </div>
-
-          <div className="border-t border-dark-lightest pt-6 mt-6">
-            <h3 className="font-bold text-lg mb-4">Subscription</h3>
-            <div className="bg-dark rounded-lg p-4">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="font-medium">Free Plan</p>
-                  <p className="text-sm text-gray-400">Basic features with ads</p>
-                </div>
-                <button className="bg-gradient-to-r from-primary to-secondary text-white px-4 py-2 rounded-full text-sm font-medium">
-                  Upgrade to Premium
-                </button>
-              </div>
+            <div className="bg-dark rounded-lg p-4 border border-gray-600">
+              <h4 className="font-medium mb-2">Account Information</h4>
+              <p className="text-sm text-gray-400">
+                Your account is managed through OAuth authentication.
+                To change your profile information, please update it through your OAuth provider
+                (Google, GitHub, etc.) and then sign in again.
+              </p>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-          <div className="border-t border-dark-lightest pt-6 mt-6">
-            <h3 className="font-bold text-lg mb-4">Danger Zone</h3>
-            <div className="bg-dark rounded-lg p-4 border border-red-800">
-              <p className="text-sm text-gray-400 mb-3">Once you delete your account, there is no going back. Please be certain.</p>
-              <button className="text-red-500 hover:text-red-400 font-medium">
-                Delete Account
+function AppearanceSettings() {
+  const [theme, setTheme] = useState('dark');
+  const [accentColor, setAccentColor] = useState('blue');
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold mb-6">Appearance Settings</h2>
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-medium mb-3">Theme</h3>
+          <div className="space-y-2">
+            <label className="flex items-center gap-3">
+              <input
+                type="radio"
+                name="theme"
+                value="dark"
+                checked={theme === 'dark'}
+                onChange={(e) => setTheme(e.target.value)}
+                className="text-primary focus:ring-primary"
+              />
+              <span>Dark Theme (Current)</span>
+            </label>
+            <label className="flex items-center gap-3 opacity-50">
+              <input
+                type="radio"
+                name="theme"
+                value="light"
+                disabled
+                className="text-primary focus:ring-primary"
+              />
+              <span>Light Theme (Coming Soon)</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-lg font-medium mb-3">Accent Color</h3>
+          <div className="grid grid-cols-4 gap-3">
+            {[
+              { name: 'Blue', value: 'blue', color: 'bg-blue-500' },
+              { name: 'Purple', value: 'purple', color: 'bg-purple-500' },
+              { name: 'Green', value: 'green', color: 'bg-green-500' },
+              { name: 'Red', value: 'red', color: 'bg-red-500' },
+            ].map((color) => (
+              <button
+                key={color.value}
+                onClick={() => setAccentColor(color.value)}
+                className={`p-3 rounded-lg border-2 transition-colors ${
+                  accentColor === color.value
+                    ? 'border-primary bg-dark-lighter'
+                    : 'border-gray-600 hover:border-gray-500'
+                }`}
+              >
+                <div className={`w-6 h-6 rounded-full ${color.color} mx-auto mb-1`}></div>
+                <span className="text-sm">{color.name}</span>
               </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 mt-2">Accent color changes will be available in a future update</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AboutSettings() {
+  return (
+    <div>
+      <h2 className="text-2xl font-bold mb-6">About</h2>
+      <div className="space-y-6">
+        <div className="bg-dark rounded-lg p-6 border border-gray-600">
+          <div className="flex items-center gap-4 mb-4">
+            <Image
+              src="/images/logo.png"
+              alt="Rhythm Bond Logo"
+              width={64}
+              height={64}
+              className="rounded-lg"
+            />
+            <div>
+              <h3 className="text-xl font-bold">Rhythm Bond</h3>
+              <p className="text-gray-400">Music Discovery & Social Platform</p>
             </div>
           </div>
+
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span className="text-gray-400">Version:</span>
+              <span>1.0.0 Beta</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Build:</span>
+              <span>2024.01.15</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Music Database:</span>
+              <span>Local JSON (public/music.json)</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-dark rounded-lg p-6 border border-gray-600">
+          <h4 className="font-medium mb-3">Features</h4>
+          <ul className="space-y-2 text-sm text-gray-400">
+            <li>• Music discovery and playback</li>
+            <li>• Custom playlists and genres</li>
+            <li>• Social features and sharing</li>
+            <li>• User profiles and preferences</li>
+            <li>• OAuth authentication</li>
+          </ul>
+        </div>
+
+        <div className="bg-dark rounded-lg p-6 border border-gray-600">
+          <h4 className="font-medium mb-3">Technology Stack</h4>
+          <ul className="space-y-2 text-sm text-gray-400">
+            <li>• Next.js 14 with App Router</li>
+            <li>• TypeScript</li>
+            <li>• Tailwind CSS</li>
+            <li>• NextAuth.js</li>
+            <li>• Prisma ORM</li>
+          </ul>
         </div>
       </div>
     </div>

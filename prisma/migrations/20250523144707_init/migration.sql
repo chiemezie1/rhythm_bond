@@ -84,6 +84,10 @@ CREATE TABLE `Playlist` (
     `coverImage` VARCHAR(191) NULL,
     `isPublic` BOOLEAN NOT NULL DEFAULT true,
     `userId` VARCHAR(191) NOT NULL,
+    `isTemplate` BOOLEAN NOT NULL DEFAULT false,
+    `sourcePlaylistId` VARCHAR(191) NULL,
+    `shareCount` INTEGER NOT NULL DEFAULT 0,
+    `tags` TEXT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
@@ -99,6 +103,22 @@ CREATE TABLE `PlaylistTrack` (
     `addedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `PlaylistTrack_playlistId_trackId_key`(`playlistId`, `trackId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `PlaylistShare` (
+    `id` VARCHAR(191) NOT NULL,
+    `playlistId` VARCHAR(191) NOT NULL,
+    `sharedById` VARCHAR(191) NOT NULL,
+    `sharedToId` VARCHAR(191) NULL,
+    `shareType` VARCHAR(191) NOT NULL DEFAULT 'copy',
+    `message` TEXT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `PlaylistShare_playlistId_idx`(`playlistId`),
+    INDEX `PlaylistShare_sharedById_idx`(`sharedById`),
+    INDEX `PlaylistShare_sharedToId_idx`(`sharedToId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -174,9 +194,10 @@ CREATE TABLE `Follow` (
 -- CreateTable
 CREATE TABLE `Post` (
     `id` VARCHAR(191) NOT NULL,
-    `content` TEXT NOT NULL,
+    `content` TEXT NULL,
     `userId` VARCHAR(191) NOT NULL,
-    `trackId` VARCHAR(191) NULL,
+    `mediaType` VARCHAR(191) NULL,
+    `mediaId` VARCHAR(191) NULL,
     `visibility` VARCHAR(191) NOT NULL DEFAULT 'public',
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
@@ -207,6 +228,78 @@ CREATE TABLE `Like` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `CommentLike` (
+    `id` VARCHAR(191) NOT NULL,
+    `userId` VARCHAR(191) NOT NULL,
+    `commentId` VARCHAR(191) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    UNIQUE INDEX `CommentLike_userId_commentId_key`(`userId`, `commentId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Genre` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `description` TEXT NULL,
+    `coverImage` VARCHAR(191) NULL,
+    `color` VARCHAR(191) NOT NULL DEFAULT '#3b82f6',
+    `isPublic` BOOLEAN NOT NULL DEFAULT true,
+    `userId` VARCHAR(191) NOT NULL,
+    `order` INTEGER NOT NULL DEFAULT 0,
+    `isTemplate` BOOLEAN NOT NULL DEFAULT false,
+    `sourceGenreId` VARCHAR(191) NULL,
+    `shareCount` INTEGER NOT NULL DEFAULT 0,
+    `tags` TEXT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `Genre_userId_name_key`(`userId`, `name`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `GenreTrack` (
+    `id` VARCHAR(191) NOT NULL,
+    `genreId` VARCHAR(191) NOT NULL,
+    `trackId` VARCHAR(191) NOT NULL,
+    `order` INTEGER NOT NULL DEFAULT 0,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    UNIQUE INDEX `GenreTrack_genreId_trackId_key`(`genreId`, `trackId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `GenreShare` (
+    `id` VARCHAR(191) NOT NULL,
+    `genreId` VARCHAR(191) NOT NULL,
+    `sharedById` VARCHAR(191) NOT NULL,
+    `sharedToId` VARCHAR(191) NULL,
+    `shareType` VARCHAR(191) NOT NULL DEFAULT 'copy',
+    `message` TEXT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `GenreShare_genreId_idx`(`genreId`),
+    INDEX `GenreShare_sharedById_idx`(`sharedById`),
+    INDEX `GenreShare_sharedToId_idx`(`sharedToId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `HomeLayout` (
+    `id` VARCHAR(191) NOT NULL,
+    `userId` VARCHAR(191) NOT NULL,
+    `layoutConfig` TEXT NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `HomeLayout_userId_key`(`userId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `Account` ADD CONSTRAINT `Account_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -217,10 +310,22 @@ ALTER TABLE `Session` ADD CONSTRAINT `Session_userId_fkey` FOREIGN KEY (`userId`
 ALTER TABLE `Playlist` ADD CONSTRAINT `Playlist_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `Playlist` ADD CONSTRAINT `Playlist_sourcePlaylistId_fkey` FOREIGN KEY (`sourcePlaylistId`) REFERENCES `Playlist`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `PlaylistTrack` ADD CONSTRAINT `PlaylistTrack_playlistId_fkey` FOREIGN KEY (`playlistId`) REFERENCES `Playlist`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `PlaylistTrack` ADD CONSTRAINT `PlaylistTrack_trackId_fkey` FOREIGN KEY (`trackId`) REFERENCES `Track`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `PlaylistShare` ADD CONSTRAINT `PlaylistShare_playlistId_fkey` FOREIGN KEY (`playlistId`) REFERENCES `Playlist`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `PlaylistShare` ADD CONSTRAINT `PlaylistShare_sharedById_fkey` FOREIGN KEY (`sharedById`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `PlaylistShare` ADD CONSTRAINT `PlaylistShare_sharedToId_fkey` FOREIGN KEY (`sharedToId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Favorite` ADD CONSTRAINT `Favorite_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
@@ -269,3 +374,33 @@ ALTER TABLE `Like` ADD CONSTRAINT `Like_userId_fkey` FOREIGN KEY (`userId`) REFE
 
 -- AddForeignKey
 ALTER TABLE `Like` ADD CONSTRAINT `Like_postId_fkey` FOREIGN KEY (`postId`) REFERENCES `Post`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CommentLike` ADD CONSTRAINT `CommentLike_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CommentLike` ADD CONSTRAINT `CommentLike_commentId_fkey` FOREIGN KEY (`commentId`) REFERENCES `Comment`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Genre` ADD CONSTRAINT `Genre_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Genre` ADD CONSTRAINT `Genre_sourceGenreId_fkey` FOREIGN KEY (`sourceGenreId`) REFERENCES `Genre`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `GenreTrack` ADD CONSTRAINT `GenreTrack_genreId_fkey` FOREIGN KEY (`genreId`) REFERENCES `Genre`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `GenreTrack` ADD CONSTRAINT `GenreTrack_trackId_fkey` FOREIGN KEY (`trackId`) REFERENCES `Track`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `GenreShare` ADD CONSTRAINT `GenreShare_genreId_fkey` FOREIGN KEY (`genreId`) REFERENCES `Genre`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `GenreShare` ADD CONSTRAINT `GenreShare_sharedById_fkey` FOREIGN KEY (`sharedById`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `GenreShare` ADD CONSTRAINT `GenreShare_sharedToId_fkey` FOREIGN KEY (`sharedToId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `HomeLayout` ADD CONSTRAINT `HomeLayout_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

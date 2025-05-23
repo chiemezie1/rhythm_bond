@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useMusic } from '@/contexts/MusicContext';
 import { useAuth } from '@/hooks/useAuth';
+import GenreShareModal from '../genre/GenreShareModal';
 
 interface GenreMenuProps {
   genre: {
@@ -21,14 +22,16 @@ interface GenreMenuProps {
 export default function GenreMenu({ genre, onClose, position, onGenreUpdated, onGenreRemoved }: GenreMenuProps) {
   const { updateGenre, deleteGenre } = useMusic();
   const { isAuthenticated } = useAuth();
-  
+
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [name, setName] = useState(genre.name);
   const [description, setDescription] = useState(genre.description || '');
   const [color, setColor] = useState(genre.color || '#3b82f6');
-  
+  const [trackCount, setTrackCount] = useState(0);
+
   const menuRef = useRef<HTMLDivElement>(null);
-  
+
   // Set menu position
   const menuStyle = position ? {
     position: 'fixed' as const,
@@ -36,7 +39,7 @@ export default function GenreMenu({ genre, onClose, position, onGenreUpdated, on
     left: `${position.x}px`,
     zIndex: 50
   } : {};
-  
+
   // Handle clicking outside of menu
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -44,24 +47,24 @@ export default function GenreMenu({ genre, onClose, position, onGenreUpdated, on
         onClose();
       }
     }
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [onClose]);
-  
+
   // Handle edit genre
   const handleEditGenre = async () => {
     if (!isAuthenticated) return;
-    
+
     try {
       const updatedGenre = await updateGenre(genre.id, {
         name,
         description,
         color
       });
-      
+
       if (updatedGenre) {
         onGenreUpdated(updatedGenre);
         setShowEditForm(false);
@@ -70,15 +73,15 @@ export default function GenreMenu({ genre, onClose, position, onGenreUpdated, on
       console.error('Error updating genre:', error);
     }
   };
-  
+
   // Handle delete genre
   const handleDeleteGenre = async () => {
     if (!isAuthenticated) return;
-    
+
     if (window.confirm(`Are you sure you want to delete the "${genre.name}" genre?`)) {
       try {
         const success = await deleteGenre(genre.id);
-        
+
         if (success) {
           onGenreRemoved(genre.id);
           onClose();
@@ -88,7 +91,51 @@ export default function GenreMenu({ genre, onClose, position, onGenreUpdated, on
       }
     }
   };
-  
+
+  // Handle share genre
+  const handleShare = async (shareData: any) => {
+    try {
+      const response = await fetch(`/api/genre/${genre.id}/share`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(shareData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(result.message || 'Genre shared successfully!');
+        setShowShareModal(false);
+        onClose();
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to share genre');
+      }
+    } catch (error) {
+      console.error('Error sharing genre:', error);
+      alert('Failed to share genre');
+    }
+  };
+
+  // Load track count
+  useEffect(() => {
+    const loadTrackCount = async () => {
+      try {
+        const response = await fetch(`/api/user/data/genres?userId=${genre.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          const genreData = data.genres.find((g: any) => g.id === genre.id);
+          if (genreData) {
+            setTrackCount(genreData.tracks?.length || 0);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading track count:', error);
+      }
+    };
+
+    loadTrackCount();
+  }, [genre.id]);
+
   return (
     <div
       ref={menuRef}
@@ -97,7 +144,7 @@ export default function GenreMenu({ genre, onClose, position, onGenreUpdated, on
     >
       <div className="p-3 border-b border-dark-lightest">
         <div className="flex items-center gap-2">
-          <div 
+          <div
             className="w-10 h-10 rounded flex-shrink-0 overflow-hidden"
             style={{ backgroundColor: genre.color || '#3b82f6' }}
           ></div>
@@ -109,7 +156,7 @@ export default function GenreMenu({ genre, onClose, position, onGenreUpdated, on
           </div>
         </div>
       </div>
-      
+
       <div className="py-1">
         {!showEditForm ? (
           <>
@@ -122,7 +169,17 @@ export default function GenreMenu({ genre, onClose, position, onGenreUpdated, on
               </svg>
               <span>Edit Genre</span>
             </button>
-            
+
+            <button
+              className="flex items-center gap-3 w-full px-4 py-2 text-left hover:bg-dark-lightest transition-colors"
+              onClick={() => setShowShareModal(true)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+              </svg>
+              <span className="text-blue-400">Share Genre</span>
+            </button>
+
             <button
               className="flex items-center gap-3 w-full px-4 py-2 text-left hover:bg-dark-lightest transition-colors"
               onClick={handleDeleteGenre}
@@ -132,7 +189,7 @@ export default function GenreMenu({ genre, onClose, position, onGenreUpdated, on
               </svg>
               <span className="text-red-500">Delete Genre</span>
             </button>
-            
+
             <button
               className="flex items-center gap-3 w-full px-4 py-2 text-left hover:bg-dark-lightest transition-colors"
               onClick={onClose}
@@ -157,7 +214,7 @@ export default function GenreMenu({ genre, onClose, position, onGenreUpdated, on
                 onChange={(e) => setName(e.target.value)}
               />
             </div>
-            
+
             <div className="mb-3">
               <label htmlFor="genreDescription" className="block text-sm font-medium text-gray-400 mb-1">
                 Description
@@ -170,7 +227,7 @@ export default function GenreMenu({ genre, onClose, position, onGenreUpdated, on
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
-            
+
             <div className="mb-4">
               <label htmlFor="genreColor" className="block text-sm font-medium text-gray-400 mb-1">
                 Color
@@ -191,7 +248,7 @@ export default function GenreMenu({ genre, onClose, position, onGenreUpdated, on
                 />
               </div>
             </div>
-            
+
             <div className="flex justify-end gap-2">
               <button
                 className="px-3 py-1 text-gray-400 hover:text-white"
@@ -210,6 +267,21 @@ export default function GenreMenu({ genre, onClose, position, onGenreUpdated, on
           </div>
         )}
       </div>
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <GenreShareModal
+          genre={{
+            id: genre.id,
+            name: genre.name,
+            description: genre.description,
+            trackCount
+          }}
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          onShare={handleShare}
+        />
+      )}
     </div>
   );
 }

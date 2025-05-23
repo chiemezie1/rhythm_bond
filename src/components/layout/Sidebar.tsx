@@ -435,6 +435,18 @@ export default function Sidebar() {
                 <span>{item.name}</span>
               </Link>
             ))}
+
+            {isAuthenticated && (
+              <Link
+                href="/discover/playlists"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-blue-400 hover:bg-dark-lightest transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                </svg>
+                <span>Discover Playlists</span>
+              </Link>
+            )}
           </div>
         )}
       </div>
@@ -508,15 +520,26 @@ export default function Sidebar() {
             ))}
 
             {isAuthenticated && (
-              <Link
-                href="/categories"
-                className="px-3 py-1.5 rounded-lg text-xs text-primary hover:bg-dark-lightest transition-colors flex items-center gap-1"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Manage Genres
-              </Link>
+              <>
+                <Link
+                  href="/discover/genres"
+                  className="px-3 py-1.5 rounded-lg text-xs text-blue-400 hover:bg-dark-lightest transition-colors flex items-center gap-1"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                  </svg>
+                  Discover Genres
+                </Link>
+                <Link
+                  href="/categories"
+                  className="px-3 py-1.5 rounded-lg text-xs text-primary hover:bg-dark-lightest transition-colors flex items-center gap-1"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Manage Genres
+                </Link>
+              </>
             )}
           </div>
         )}

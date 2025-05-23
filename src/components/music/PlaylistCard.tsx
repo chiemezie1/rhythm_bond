@@ -9,6 +9,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Play, Trash2, Share2 } from "lucide-react"
 import type { UserPlaylist } from "@/services/userDataService"
+import PlaylistShareModal from "../playlist/PlaylistShareModal"
 
 interface PlaylistCardProps {
   playlist: UserPlaylist
@@ -20,6 +21,7 @@ interface PlaylistCardProps {
 
 export default function PlaylistCard({ playlist, index, onPlay, onDelete, onMenuOpen }: PlaylistCardProps) {
   const [isHovered, setIsHovered] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
 
   // Get a default cover image for empty playlists
@@ -72,14 +74,29 @@ export default function PlaylistCard({ playlist, index, onPlay, onDelete, onMenu
     e.preventDefault()
     e.stopPropagation()
 
-    if (!menuButtonRef.current || !onMenuOpen) return
+    // Open share modal instead of generic menu
+    setShowShareModal(true)
+  }
 
-    // Calculate position for the menu
-    const rect = menuButtonRef.current.getBoundingClientRect()
-    onMenuOpen(playlist, {
-      x: rect.right,
-      y: rect.top,
-    })
+  const handleShare = async (shareData: any) => {
+    try {
+      const response = await fetch(`/api/playlist/${playlist.id}/share`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(shareData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(result.message || 'Playlist shared successfully!');
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to share playlist');
+      }
+    } catch (error) {
+      console.error('Error sharing playlist:', error);
+      alert('Failed to share playlist');
+    }
   }
 
   return (
@@ -123,21 +140,34 @@ export default function PlaylistCard({ playlist, index, onPlay, onDelete, onMenu
                 <Trash2 className="h-6 w-6 text-white" />
               </button>
             )}
-            {onMenuOpen && (
-              <button
-                ref={menuButtonRef}
-                className="bg-gray-700 rounded-full p-2 transform hover:scale-110 transition-transform"
-                onClick={handleMenuClick}
-                aria-label="Share playlist"
-              >
-                <Share2 className="h-6 w-6 text-white" />
-              </button>
-            )}
+            <button
+              ref={menuButtonRef}
+              className="bg-blue-600 rounded-full p-2 transform hover:scale-110 transition-transform"
+              onClick={handleMenuClick}
+              aria-label="Share playlist"
+            >
+              <Share2 className="h-6 w-6 text-white" />
+            </button>
           </div>
         </div>
       </div>
       <h3 className="font-medium truncate">{playlist.name}</h3>
       <p className="text-sm text-gray-400">{playlist.tracks.length} tracks</p>
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <PlaylistShareModal
+          playlist={{
+            id: playlist.id,
+            name: playlist.name,
+            description: playlist.description,
+            trackCount: playlist.tracks.length
+          }}
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          onShare={handleShare}
+        />
+      )}
     </Link>
   )
 }

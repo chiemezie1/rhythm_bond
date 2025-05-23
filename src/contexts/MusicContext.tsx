@@ -651,7 +651,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const response = await fetch('/api/user/data/genres');
       if (response.ok) {
         const data = await response.json();
-        return data;
+        return data.genres || []; // Return the genres array from the response
       }
       return [];
     } catch (error) {

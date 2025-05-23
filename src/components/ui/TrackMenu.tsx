@@ -211,21 +211,33 @@ export default function TrackMenu({
       switch (activeSubmenu) {
         case "playlists":
           const newPlaylist = await createPlaylist(newItemName, "")
-          await addTrackToPlaylist(newPlaylist.id, track.id)
-          setPlaylists([...playlists, newPlaylist])
+          if (newPlaylist && newPlaylist.id) {
+            await addTrackToPlaylist(newPlaylist.id, track.id)
+            setPlaylists([...playlists, newPlaylist])
+          } else {
+            throw new Error("Failed to create playlist")
+          }
           break
         case "tags":
           const newTag = await createTag(newItemName)
-          await addTagToTrack(newTag.id, track.id)
-          setTags([...tags, newTag])
-          setTrackTags([...trackTags, newTag])
+          if (newTag && newTag.id) {
+            await addTagToTrack(newTag.id, track.id)
+            setTags([...tags, newTag])
+            setTrackTags([...trackTags, newTag])
+          } else {
+            throw new Error("Failed to create tag")
+          }
           break
         case "genres":
           const newGenre = await createGenre(newItemName, newItemColor)
-          await addTrackToGenre(newGenre.id, track.id)
-          setGenres([...genres, newGenre])
-          setTrackGenres([...trackGenres, newGenre])
-          setNewItemColor("#3b82f6") // Reset color to default
+          if (newGenre && newGenre.id) {
+            await addTrackToGenre(newGenre.id, track.id)
+            setGenres([...genres, newGenre])
+            setTrackGenres([...trackGenres, newGenre])
+            setNewItemColor("#3b82f6") // Reset color to default
+          } else {
+            throw new Error("Failed to create genre")
+          }
           break
       }
       setNewItemName("")
@@ -380,8 +392,13 @@ export default function TrackMenu({
                       key={playlist.id}
                       className="flex items-center w-full px-4 py-2 text-left hover:bg-dark-lightest transition-colors"
                       onClick={async () => {
-                        await addTrackToPlaylist(playlist.id, track.id)
-                        setActiveSubmenu(null)
+                        try {
+                          await addTrackToPlaylist(playlist.id, track.id)
+                          setActiveSubmenu(null)
+                        } catch (error) {
+                          console.error("Error adding track to playlist:", error)
+                          alert("Failed to add track to playlist. Please try again.")
+                        }
                       }}
                     >
                       <span className="truncate">{playlist.name}</span>
@@ -424,12 +441,17 @@ export default function TrackMenu({
                         key={tag.id}
                         className="flex items-center justify-between w-full px-4 py-2 text-left hover:bg-dark-lightest transition-colors"
                         onClick={async () => {
-                          if (isTagged) {
-                            await removeTagFromTrack(tag.id, track.id)
-                            setTrackTags(trackTags.filter((t) => t.id !== tag.id))
-                          } else {
-                            await addTagToTrack(tag.id, track.id)
-                            setTrackTags([...trackTags, tag])
+                          try {
+                            if (isTagged) {
+                              await removeTagFromTrack(tag.id, track.id)
+                              setTrackTags(trackTags.filter((t) => t.id !== tag.id))
+                            } else {
+                              await addTagToTrack(tag.id, track.id)
+                              setTrackTags([...trackTags, tag])
+                            }
+                          } catch (error) {
+                            console.error("Error managing tag:", error)
+                            alert("Failed to manage tag. Please try again.")
                           }
                         }}
                       >
@@ -488,14 +510,19 @@ export default function TrackMenu({
                         key={genre.id}
                         className="flex items-center justify-between w-full px-4 py-2 text-left hover:bg-dark-lightest transition-colors"
                         onClick={async () => {
-                          if (isInGenre) {
-                            // Remove track from genre (not implemented in this example)
-                            // await removeTrackFromGenre(genre.id, track.id)
-                            // setTrackGenres(trackGenres.filter((g) => g.id !== genre.id))
-                            alert("Removing tracks from genres is not implemented yet")
-                          } else {
-                            await addTrackToGenre(genre.id, track.id)
-                            setTrackGenres([...trackGenres, genre])
+                          try {
+                            if (isInGenre) {
+                              // Remove track from genre (not implemented in this example)
+                              // await removeTrackFromGenre(genre.id, track.id)
+                              // setTrackGenres(trackGenres.filter((g) => g.id !== genre.id))
+                              alert("Removing tracks from genres is not implemented yet")
+                            } else {
+                              await addTrackToGenre(genre.id, track.id)
+                              setTrackGenres([...trackGenres, genre])
+                            }
+                          } catch (error) {
+                            console.error("Error managing genre:", error)
+                            alert("Failed to manage genre. Please try again.")
                           }
                         }}
                       >
