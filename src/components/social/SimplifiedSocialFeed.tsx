@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useMusic } from '@/contexts/MusicContext';
-import CreatePost from './CreatePost';
 import SocialPost, { Post } from './SocialPost';
 import { Track } from '@/services/musicService';
 
@@ -221,9 +220,6 @@ export default function SimplifiedSocialFeed({ filter = 'all' }: SocialFeedProps
 
   return (
     <div className="space-y-4">
-      {/* Create post component */}
-      <CreatePost onPostCreated={handleCreatePost} />
-
       {/* Loading state */}
       {isLoading && (
         <div className="bg-background-elevated rounded-lg p-6 flex justify-center">

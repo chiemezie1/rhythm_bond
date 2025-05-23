@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
+import FixUsernameButton from './FixUsernameButton';
 
 interface UserProfileData {
   id: string;
@@ -36,7 +37,6 @@ interface UserProfileProps {
 }
 
 export default function UserProfile({ userId, minimal = false }: UserProfileProps) {
-  const { user, isAuthenticated } = useAuth();
   const [userData, setUserData] = useState<UserProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,26 +52,45 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
     bio: ''
   });
 
-  // Determine which user ID to use
-  const profileUserId = userId || (user?.id as string);
+  // Get auth for current user functionality
+  const { user, isAuthenticated } = useAuth();
+
+  // If no userId provided, use current user's ID
+  const effectiveUserId = userId || user?.id;
   const isCurrentUser = !userId || (user && userId === user.id);
 
-  // Fetch user profile data
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (!profileUserId) {
-        setIsLoading(false);
-        return;
-      }
 
+
+  // Fetch user profile data - SIMPLE VERSION
+  useEffect(() => {
+    if (!effectiveUserId) {
+      setIsLoading(false);
+      return;
+    }
+
+    // If viewing own profile, wait for authentication
+    if (isCurrentUser && !isAuthenticated) {
+      return;
+    }
+
+    // Reset state for new user
+    setUserData(null);
+    setError(null);
+    setIsLoading(true);
+
+    const fetchUserProfile = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
+
+
         // Get user profile
-        const profileResponse = await fetch(`/api/user/profile?userId=${profileUserId}`);
+        const profileResponse = await fetch(`/api/user/profile?userId=${effectiveUserId}`);
         if (!profileResponse.ok) {
-          throw new Error('Failed to fetch user profile');
+          const errorText = await profileResponse.text();
+          console.error('Profile fetch failed:', profileResponse.status, errorText);
+          throw new Error(`Failed to fetch user profile: ${profileResponse.status}`);
         }
         const profileData = await profileResponse.json();
         const profile = profileData.user;
@@ -79,7 +98,7 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
         // Get user's playlists
         let playlistsData = { playlists: [] };
         try {
-          const playlistsResponse = await fetch('/api/user/data/playlists');
+          const playlistsResponse = await fetch(`/api/user/data/playlists?userId=${effectiveUserId}`);
           if (playlistsResponse.ok) {
             playlistsData = await playlistsResponse.json();
           }
@@ -90,7 +109,7 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
         // Get user's favorites
         let favoritesData = { favorites: [] };
         try {
-          const favoritesResponse = await fetch('/api/user/data/favorites');
+          const favoritesResponse = await fetch(`/api/user/data/favorites?userId=${effectiveUserId}`);
           if (favoritesResponse.ok) {
             favoritesData = await favoritesResponse.json();
           }
@@ -101,7 +120,7 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
         // Get user's tags
         let tagsData = { tags: [] };
         try {
-          const tagsResponse = await fetch('/api/user/data/tags');
+          const tagsResponse = await fetch(`/api/user/data/tags?userId=${effectiveUserId}`);
           if (tagsResponse.ok) {
             tagsData = await tagsResponse.json();
           }
@@ -112,7 +131,7 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
         // Get user's genres
         let genresData = { genres: [] };
         try {
-          const genresResponse = await fetch('/api/user/data/genres');
+          const genresResponse = await fetch(`/api/user/data/genres?userId=${effectiveUserId}`);
           if (genresResponse.ok) {
             genresData = await genresResponse.json();
           }
@@ -125,7 +144,7 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
           id: profile.id,
           name: profile.displayName || 'Unknown User',
           username: profile.username || 'unknown',
-          profilePic: profile.avatarUrl || '/images/default-avatar.png',
+          profilePic: profile.avatarUrl || '/images/logo.png',
           bio: profile.bio || 'No bio yet',
           joinDate: new Date(profile.joinDate).toLocaleDateString(undefined, {
             year: 'numeric',
@@ -179,15 +198,15 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
     };
 
     fetchUserProfile();
-  }, [profileUserId, isAuthenticated]);
+  }, [effectiveUserId, isAuthenticated]); // Depend on effectiveUserId and auth state
 
   // Load followers
   const loadFollowers = async () => {
-    if (!profileUserId || loadingFollowers) return;
+    if (!effectiveUserId || loadingFollowers) return;
 
     try {
       setLoadingFollowers(true);
-      const response = await fetch(`/api/user/${profileUserId}/followers`);
+      const response = await fetch(`/api/user/${effectiveUserId}/followers`);
       if (response.ok) {
         const data = await response.json();
         setFollowers(data.followers || []);
@@ -201,11 +220,11 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
 
   // Load following
   const loadFollowing = async () => {
-    if (!profileUserId || loadingFollowing) return;
+    if (!effectiveUserId || loadingFollowing) return;
 
     try {
       setLoadingFollowing(true);
-      const response = await fetch(`/api/user/${profileUserId}/following`);
+      const response = await fetch(`/api/user/${effectiveUserId}/following`);
       if (response.ok) {
         const data = await response.json();
         setFollowing(data.following || []);
@@ -224,7 +243,7 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
     } else if (activeTab === 'following' && following.length === 0) {
       loadFollowing();
     }
-  }, [activeTab, profileUserId]);
+  }, [activeTab, effectiveUserId]);
 
   // Handle edit profile form changes
   const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -277,6 +296,7 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
     }
   };
 
+  // Show loading state
   if (isLoading) {
     return (
       <div className="animate-pulse pb-8">
@@ -290,7 +310,8 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
     );
   }
 
-  if (error || !userData) {
+  // Show error state
+  if (error || (!isLoading && !userData)) {
     return (
       <div className="bg-dark-lighter rounded-xl p-6 text-center">
         <p className="text-red-400 mb-4">{error || 'User not found'}</p>
@@ -415,6 +436,15 @@ export default function UserProfile({ userId, minimal = false }: UserProfileProp
           </div>
         </div>
       </div>
+
+      {/* Fix Username Alert - Only show for current user with problematic username */}
+      {isCurrentUser && userData.username && (
+        userData.username.startsWith('user_') ||
+        userData.username.length > 20 ||
+        /^[a-f0-9]{20,}$/.test(userData.username) // Matches long hex-like strings
+      ) && (
+        <FixUsernameButton />
+      )}
 
       {/* Tabs */}
       <div className="mb-8">

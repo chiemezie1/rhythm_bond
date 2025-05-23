@@ -4,6 +4,19 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+// Helper function to generate username from name
+function generateUsername(name: string): string {
+  // Remove spaces and special characters, convert to lowercase
+  const baseUsername = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .substring(0, 15); // Limit length
+
+  // Add random suffix to ensure uniqueness
+  const randomSuffix = Math.random().toString(36).substring(2, 6);
+  return `${baseUsername}${randomSuffix}`;
+}
+
 export async function POST(request: Request) {
   try {
     const { name, email, password } = await request.json();
@@ -28,6 +41,20 @@ export async function POST(request: Request) {
       );
     }
 
+    // Generate a unique username
+    let username = generateUsername(name);
+    let usernameExists = await prisma.user.findUnique({
+      where: { username },
+    });
+
+    // Keep generating until we find a unique username
+    while (usernameExists) {
+      username = generateUsername(name);
+      usernameExists = await prisma.user.findUnique({
+        where: { username },
+      });
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -37,12 +64,13 @@ export async function POST(request: Request) {
         name,
         email,
         password: hashedPassword,
+        username, // Add the generated username
       },
     });
 
     // Return user without password
     const { password: _, ...userWithoutPassword } = user;
-    
+
     return NextResponse.json(
       { message: "User registered successfully", user: userWithoutPassword },
       { status: 201 }

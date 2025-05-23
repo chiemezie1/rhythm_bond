@@ -62,7 +62,7 @@ export default function TopBar() {
         <Link href="/">
           <div className="flex items-center gap-2">
             <Image
-              src="/images/logo.png"
+              src="/logo.svg"
               alt="RhythmBond Logo"
               width={32}
               height={32}

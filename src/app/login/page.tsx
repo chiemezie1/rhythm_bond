@@ -15,7 +15,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       setError('Please enter both email and password');
       return;
@@ -24,7 +24,7 @@ export default function LoginPage() {
     try {
       setLoading(true);
       setError('');
-      
+
       const result = await signIn('credentials', {
         redirect: false,
         email,
@@ -50,11 +50,11 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-dark">
       <div className="w-full max-w-md p-8 bg-dark-lighter rounded-xl shadow-lg">
         <div className="flex flex-col items-center mb-8">
-          <Image 
-            src="/images/logo.png" 
-            alt="RhythmBond Logo" 
-            width={80} 
-            height={80} 
+          <Image
+            src="/logo.svg"
+            alt="RhythmBond Logo"
+            width={80}
+            height={80}
             className="mb-4"
           />
           <h1 className="text-3xl font-bold text-white">Welcome Back</h1>

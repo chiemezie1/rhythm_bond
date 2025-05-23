@@ -13,12 +13,7 @@ export default function ProfilePage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
-  // Redirect to user's profile page if authenticated
-  useEffect(() => {
-    if (!isLoading && isAuthenticated && user && user.username) {
-      router.push(`/user/${user.username}`);
-    }
-  }, [isAuthenticated, isLoading, user, router]);
+  // No redirect - show profile directly on /profile route
 
   if (isLoading) {
     return (

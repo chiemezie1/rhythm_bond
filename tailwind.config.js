@@ -62,6 +62,7 @@ module.exports = {
       padding: {
         'topbar': '56px', // Padding for the top navigation bar
         'player': '70px', // Padding for the player bar
+        'footer': '200px', // Padding for the footer
       },
     },
   },

@@ -14,20 +14,39 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Search for users (MySQL doesn't support mode: 'insensitive', but contains is case-insensitive by default in MySQL)
-    const users = await prisma.user.findMany({
+    console.log('User search API - query:', query);
+
+    // First try exact match, then fallback to contains search
+    let users = await prisma.user.findMany({
       where: {
         OR: [
-          { username: { contains: query } },
-          { name: { contains: query } }
+          { username: { equals: query } },
+          { name: { equals: query } }
         ]
       },
       include: {
         followers: true,
         following: true
       },
-      take: 10 // Limit to 10 results
+      take: 10
     });
+
+    // If no exact match found, try contains search
+    if (users.length === 0) {
+      users = await prisma.user.findMany({
+        where: {
+          OR: [
+            { username: { contains: query } },
+            { name: { contains: query } }
+          ]
+        },
+        include: {
+          followers: true,
+          following: true
+        },
+        take: 10
+      });
+    }
 
     // Transform to our interface
     const userProfiles = users.map(user => ({

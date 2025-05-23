@@ -7,26 +7,34 @@ import { prisma } from '@/lib/prisma';
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session || !session.user) {
       return NextResponse.json(
-        { error: 'You must be logged in to access your playlists' },
+        { error: 'You must be logged in to access playlists' },
         { status: 401 }
       );
     }
-    
-    const userId = session.user.id;
-    
+
+    // Check if we're fetching for a specific user or the current user
+    const { searchParams } = new URL(req.url);
+    const targetUserId = searchParams.get('userId');
+    const userId = targetUserId || session.user.id;
+
     // Get playlists from the database
+    // If fetching for another user, only get public playlists
+    const whereClause = targetUserId && targetUserId !== session.user.id
+      ? { userId: targetUserId, isPublic: true }
+      : { userId };
+
     const playlists = await prisma.playlist.findMany({
-      where: { userId },
+      where: whereClause,
       include: {
         tracks: {
           include: { track: true }
         }
       }
     });
-    
+
     // Transform to our interface
     const transformedPlaylists = playlists.map(playlist => ({
       id: playlist.id,
@@ -46,7 +54,7 @@ export async function GET(req: NextRequest) {
       userId: playlist.userId,
       isPublic: playlist.isPublic
     }));
-    
+
     return NextResponse.json({ playlists: transformedPlaylists });
   } catch (error) {
     console.error('Error getting playlists:', error);
@@ -61,24 +69,24 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session || !session.user) {
       return NextResponse.json(
         { error: 'You must be logged in to create playlists' },
         { status: 401 }
       );
     }
-    
+
     const userId = session.user.id;
     const { name, description = '', isPublic = false } = await req.json();
-    
+
     if (!name) {
       return NextResponse.json(
         { error: 'Playlist name is required' },
         { status: 400 }
       );
     }
-    
+
     // Create the playlist
     const playlist = await prisma.playlist.create({
       data: {
@@ -88,7 +96,7 @@ export async function POST(req: NextRequest) {
         userId
       }
     });
-    
+
     return NextResponse.json({
       success: true,
       playlist: {

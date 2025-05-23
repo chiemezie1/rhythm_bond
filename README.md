@@ -98,6 +98,9 @@ We welcome contributions! - See [CONTRIBUTING.md](CONTRIBUTING.md).
 ## ARCHITECTURE
 Complete project details – See [ARCHITECTURE.md](ARCHITECTURE.md).
 
+## Music
+Music Database - See [MUSIC_DATABASE.md`](MUSIC_DATABASE.md).
+
 ## Author
 Authors and Contributors – See [AUTHORS.md](AUTHORS.md).
 

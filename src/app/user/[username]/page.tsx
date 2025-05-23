@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,35 +15,36 @@ export default function UserProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Track current fetch to prevent duplicates
+  const currentFetchRef = useRef<string | null>(null);
+
   // Fetch user ID from username
   useEffect(() => {
+    if (!username) return;
+
+    // Prevent duplicate fetches for the same username
+    if (currentFetchRef.current === username) {
+      return;
+    }
+
+    currentFetchRef.current = username;
+
     const fetchUserId = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        // Check if this is the current user
-        if (isAuthenticated && user && user.username === username) {
-          setUserId(user.id);
-          setIsLoading(false);
-          return;
-        }
+        // Use direct username lookup API
+        const response = await fetch(`/api/user/by-username/${encodeURIComponent(username)}`);
 
-        // Find user by username using API
-        const response = await fetch(`/api/user/search?q=${encodeURIComponent(username)}`);
-        if (!response.ok) {
-          throw new Error('Failed to search users');
-        }
-
-        const data = await response.json();
-        const matchedUser = data.users.find((u: any) => u.username === username);
-
-        if (matchedUser) {
-          setUserId(matchedUser.id);
-        } else {
+        if (response.ok) {
+          const data = await response.json();
+          setUserId(data.user.id);
+        } else if (response.status === 404) {
           setError('User not found');
+        } else {
+          throw new Error('Failed to lookup user');
         }
-
         setIsLoading(false);
       } catch (err) {
         console.error('Error fetching user:', err);
@@ -53,7 +54,7 @@ export default function UserProfilePage() {
     };
 
     fetchUserId();
-  }, [username, isAuthenticated, user]);
+  }, [username]); // ONLY depend on username
 
   if (isLoading) {
     return (

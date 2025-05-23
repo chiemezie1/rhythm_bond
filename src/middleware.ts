@@ -9,6 +9,7 @@ const protectedPaths = [
   '/library',
   '/social',
   '/playlists/create',
+  '/music-management',
 ];
 
 // List of paths that are only accessible to non-authenticated users
@@ -20,10 +21,10 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
   // Check if the path is protected and user is not authenticated
-  const isProtectedPath = protectedPaths.some(protectedPath => 
+  const isProtectedPath = protectedPaths.some(protectedPath =>
     path === protectedPath || path.startsWith(`${protectedPath}/`)
   );
-  
+
   if (isProtectedPath && !isAuthenticated) {
     const redirectUrl = new URL('/login', request.url);
     redirectUrl.searchParams.set('callbackUrl', encodeURI(request.url));
@@ -31,10 +32,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check if the path is for non-authenticated users and user is authenticated
-  const isAuthPath = authPaths.some(authPath => 
+  const isAuthPath = authPaths.some(authPath =>
     path === authPath || path.startsWith(`${authPath}/`)
   );
-  
+
   if (isAuthPath && isAuthenticated) {
     return NextResponse.redirect(new URL('/', request.url));
   }

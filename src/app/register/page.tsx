@@ -16,7 +16,7 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate inputs
     if (!name || !email || !password || !confirmPassword) {
       setError('All fields are required');
@@ -36,7 +36,7 @@ export default function RegisterPage() {
     try {
       setLoading(true);
       setError('');
-      
+
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -68,11 +68,11 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-dark">
       <div className="w-full max-w-md p-8 bg-dark-lighter rounded-xl shadow-lg">
         <div className="flex flex-col items-center mb-8">
-          <Image 
-            src="/images/logo.png" 
-            alt="RhythmBond Logo" 
-            width={80} 
-            height={80} 
+          <Image
+            src="/logo.svg"
+            alt="RhythmBond Logo"
+            width={80}
+            height={80}
             className="mb-4"
           />
           <h1 className="text-3xl font-bold text-white">Create Account</h1>

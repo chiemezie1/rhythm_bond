@@ -4,7 +4,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
 
 // GET /api/user/data/genres
-// Get all genres for the current user
+// Get all genres for the current user or specified user
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,17 +13,43 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
+    // Check if we're fetching for a specific user or the current user
+    const { searchParams } = new URL(req.url);
+    const targetUserId = searchParams.get('userId');
 
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    let userId: string;
+
+    if (targetUserId) {
+      userId = targetUserId;
+    } else {
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+      });
+
+      if (!user) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
+
+      userId = user.id;
     }
 
     // Get all genres for the user
+    // If fetching for another user, only get public genres
+    let isOtherUser = false;
+    if (targetUserId) {
+      // Get current user's ID to compare
+      const currentUser = await prisma.user.findUnique({
+        where: { email: session.user.email },
+      });
+      isOtherUser = currentUser ? targetUserId !== currentUser.id : true;
+    }
+
+    const whereClause = isOtherUser
+      ? { userId, isPublic: true }
+      : { userId };
+
     const genres = await prisma.genre.findMany({
-      where: { userId: user.id },
+      where: whereClause,
       orderBy: { order: 'asc' },
       include: {
         tracks: {
@@ -59,7 +85,7 @@ export async function GET(req: NextRequest) {
       }))
     }));
 
-    return NextResponse.json(formattedGenres);
+    return NextResponse.json({ genres: formattedGenres });
   } catch (error) {
     console.error('Error fetching genres:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

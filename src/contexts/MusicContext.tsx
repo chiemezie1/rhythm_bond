@@ -63,7 +63,7 @@ interface MusicContextType {
   // Genre-related functions
   getGenres: () => Promise<any[]>;
   createGenre: (name: string, color: string, description?: string) => Promise<any>;
-  addTrackToGenre: (genreId: string, trackId: string) => Promise<boolean>;
+  addTrackToGenre: (genreId: string, trackId: string, track?: Track) => Promise<boolean>;
   removeTrackFromGenre: (genreId: string, trackId: string) => Promise<boolean>;
   getGenreById: (genreId: string) => Promise<any>;
   updateGenre: (genreId: string, data: any) => Promise<any>;
@@ -766,7 +766,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const addTrackToGenre = async (genreId: string, trackId: string) => {
+  const addTrackToGenre = async (genreId: string, trackId: string, track?: Track) => {
     if (!userId) {
       return false;
     }
@@ -777,7 +777,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ trackId })
+        body: JSON.stringify({ trackId, track })
       });
 
       return response.ok;

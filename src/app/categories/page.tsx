@@ -10,28 +10,28 @@ import Image from 'next/image';
 export default function CategoriesPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { getGenres, createGenre, updateGenre, deleteGenre } = useMusic();
-  
+
   const [genres, setGenres] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingGenre, setEditingGenre] = useState<any>(null);
-  
+
   // Form state
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [color, setColor] = useState('#3b82f6');
-  
+
   // Load genres
   useEffect(() => {
     const loadGenres = async () => {
       if (authLoading) return;
-      
+
       if (!isAuthenticated) {
         // Redirect to login if not authenticated
         window.location.href = '/login';
         return;
       }
-      
+
       try {
         setIsLoading(true);
         const userGenres = await getGenres();
@@ -42,19 +42,19 @@ export default function CategoriesPage() {
         setIsLoading(false);
       }
     };
-    
+
     loadGenres();
   }, [isAuthenticated, authLoading, getGenres]);
-  
+
   // Handle create genre
   const handleCreateGenre = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!name.trim()) return;
-    
+
     try {
       const newGenre = await createGenre(name, color, description);
-      
+
       if (newGenre) {
         setGenres([...genres, newGenre]);
         setName('');
@@ -66,20 +66,20 @@ export default function CategoriesPage() {
       console.error('Error creating genre:', error);
     }
   };
-  
+
   // Handle update genre
   const handleUpdateGenre = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!editingGenre || !name.trim()) return;
-    
+
     try {
       const updatedGenre = await updateGenre(editingGenre.id, {
         name,
         description,
         color
       });
-      
+
       if (updatedGenre) {
         setGenres(genres.map(g => g.id === updatedGenre.id ? updatedGenre : g));
         setEditingGenre(null);
@@ -88,13 +88,13 @@ export default function CategoriesPage() {
       console.error('Error updating genre:', error);
     }
   };
-  
+
   // Handle delete genre
   const handleDeleteGenre = async (genreId: string) => {
     if (window.confirm('Are you sure you want to delete this genre?')) {
       try {
         const success = await deleteGenre(genreId);
-        
+
         if (success) {
           setGenres(genres.filter(g => g.id !== genreId));
         }
@@ -103,7 +103,7 @@ export default function CategoriesPage() {
       }
     }
   };
-  
+
   // Start editing a genre
   const startEditing = (genre: any) => {
     setEditingGenre(genre);
@@ -111,7 +111,7 @@ export default function CategoriesPage() {
     setDescription(genre.description || '');
     setColor(genre.color || '#3b82f6');
   };
-  
+
   // Cancel editing
   const cancelEditing = () => {
     setEditingGenre(null);
@@ -119,7 +119,7 @@ export default function CategoriesPage() {
     setDescription('');
     setColor('#3b82f6');
   };
-  
+
   // Get a default cover image for genres without one
   const getDefaultCoverImage = (index: number) => {
     const colors = [
@@ -138,33 +138,64 @@ export default function CategoriesPage() {
       </div>
     );
   };
-  
+
   return (
     <Layout>
       <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Manage Categories</h1>
-          
-          {!showCreateForm && !editingGenre && (
-            <button
-              className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md flex items-center gap-2"
-              onClick={() => setShowCreateForm(true)}
+        {/* Breadcrumb Navigation */}
+        <div className="mb-6">
+          <nav className="flex items-center space-x-2 text-sm">
+            <Link
+              href="/"
+              className="text-gray-400 hover:text-white transition-colors flex items-center gap-1"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
-              Create New Genre
-            </button>
-          )}
+              Home
+            </Link>
+            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            <span className="text-white">Categories</span>
+          </nav>
         </div>
-        
+
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <h1 className="text-2xl font-bold">Manage Categories</h1>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Home
+            </Link>
+
+            {!showCreateForm && !editingGenre && (
+              <button
+                className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md flex items-center gap-2"
+                onClick={() => setShowCreateForm(true)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Create New Genre
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Create/Edit Form */}
         {(showCreateForm || editingGenre) && (
           <div className="bg-dark-lighter rounded-xl p-6 mb-8">
             <h2 className="text-xl font-bold mb-4">
               {editingGenre ? 'Edit Genre' : 'Create New Genre'}
             </h2>
-            
+
             <form onSubmit={editingGenre ? handleUpdateGenre : handleCreateGenre}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -181,7 +212,7 @@ export default function CategoriesPage() {
                       required
                     />
                   </div>
-                  
+
                   <div className="mb-4">
                     <label htmlFor="description" className="block text-sm font-medium text-gray-400 mb-1">
                       Description
@@ -195,7 +226,7 @@ export default function CategoriesPage() {
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <div className="mb-4">
                     <label htmlFor="color" className="block text-sm font-medium text-gray-400 mb-1">
@@ -217,12 +248,12 @@ export default function CategoriesPage() {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-400 mb-1">
                       Preview
                     </label>
-                    <div 
+                    <div
                       className="h-24 rounded-md flex items-center justify-center text-white font-bold text-xl"
                       style={{ backgroundColor: color }}
                     >
@@ -231,7 +262,7 @@ export default function CategoriesPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex justify-end gap-3 mt-4">
                 <button
                   type="button"
@@ -257,7 +288,7 @@ export default function CategoriesPage() {
             </form>
           </div>
         )}
-        
+
         {/* Genres Grid */}
         {isLoading ? (
           <div className="flex justify-center py-12">
@@ -286,7 +317,7 @@ export default function CategoriesPage() {
                       className="object-cover"
                     />
                   ) : (
-                    <div 
+                    <div
                       className="w-full h-full flex items-center justify-center"
                       style={{ backgroundColor: genre.color || '#3b82f6' }}
                     >
@@ -294,13 +325,13 @@ export default function CategoriesPage() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="p-4">
                   <h3 className="font-bold text-lg mb-1">{genre.name}</h3>
                   {genre.description && (
                     <p className="text-gray-400 text-sm mb-3">{genre.description}</p>
                   )}
-                  
+
                   <div className="flex items-center justify-between mt-2">
                     <Link
                       href={`/genre/${genre.id}`}
@@ -308,7 +339,7 @@ export default function CategoriesPage() {
                     >
                       View Tracks
                     </Link>
-                    
+
                     <div className="flex items-center gap-2">
                       <button
                         className="text-gray-400 hover:text-white p-1"

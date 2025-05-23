@@ -10,12 +10,15 @@ export async function GET(req: NextRequest) {
 
     if (!session || !session.user) {
       return NextResponse.json(
-        { error: 'You must be logged in to access your favorites' },
+        { error: 'You must be logged in to access favorites' },
         { status: 401 }
       );
     }
 
-    const userId = session.user.id;
+    // Check if we're fetching for a specific user or the current user
+    const { searchParams } = new URL(req.url);
+    const targetUserId = searchParams.get('userId');
+    const userId = targetUserId || session.user.id;
 
     // Get favorites from the database
     const favorites = await prisma.favorite.findMany({

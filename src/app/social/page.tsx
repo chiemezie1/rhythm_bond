@@ -14,6 +14,7 @@ export default function SocialPage() {
   const filter = searchParams.get('filter') as 'all' | 'following' | 'trending' || 'all';
   const [activeTab, setActiveTab] = useState<'all' | 'following' | 'trending'>('all');
   const [isLoading, setIsLoading] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Set active tab from URL params
   useEffect(() => {
@@ -21,6 +22,11 @@ export default function SocialPage() {
       setActiveTab(filter as 'all' | 'following' | 'trending');
     }
   }, [filter]);
+
+  // Handle post creation to refresh the feed
+  const handlePostCreated = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
 
 
@@ -109,12 +115,12 @@ export default function SocialPage() {
             {/* Create Post */}
             {isAuthenticated && (
               <div className="mb-8">
-                <CreatePost />
+                <CreatePost onPostCreated={handlePostCreated} />
               </div>
             )}
 
             {/* Social Feed */}
-            <SimplifiedSocialFeed filter={activeTab} />
+            <SimplifiedSocialFeed filter={activeTab} key={refreshTrigger} />
           </div>
 
           {/* Sidebar */}

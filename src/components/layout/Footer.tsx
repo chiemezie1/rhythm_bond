@@ -25,7 +25,7 @@ export default function Footer() {
             <div className="md:w-1/3 lg:w-2/5">
               <Link href="/" className="flex items-center gap-3 mb-6">
                 <Image
-                  src="/images/logo.png"
+                  src="/logo.svg"
                   alt="RhythmBond Logo"
                   width={40}
                   height={40}

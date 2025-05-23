@@ -14,6 +14,8 @@ declare module "next-auth" {
       email?: string | null;
       /** The user's image. */
       image?: string | null;
+      /** The user's username. */
+      username?: string | null;
     };
   }
 
@@ -22,6 +24,7 @@ declare module "next-auth" {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    username?: string | null;
   }
 }
 
@@ -30,5 +33,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     /** The user's id. */
     id: string;
+    /** The user's username. */
+    username?: string;
   }
 }

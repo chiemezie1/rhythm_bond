@@ -25,7 +25,7 @@ export async function POST(
     }
 
     const { id: genreId } = await params;
-    const { trackId } = await req.json();
+    const { trackId, track: trackData } = await req.json();
 
     if (!trackId) {
       return NextResponse.json({ error: 'Track ID is required' }, { status: 400 });
@@ -55,32 +55,45 @@ export async function POST(
       });
     }
 
-    // If still not found, try to get track details from the music API
+    // If still not found, create a new track record
     if (!track) {
       try {
-        // First, check if this is a YouTube ID or a custom ID
+        // Use track data if provided, otherwise try to get details from the music API
         let youtubeId = trackId;
-        let title = "";
-        let artist = "";
+        let title = "Unknown Track";
+        let artist = "Unknown Artist";
+        let duration = "0:00";
+        let thumbnail = `https://i.ytimg.com/vi/${trackId}/hqdefault.jpg`;
 
-        // If it's a custom ID (like afro_001), extract genre and track number
-        if (trackId.includes('_')) {
-          const parts = trackId.split('_');
-          const genre = parts[0];
-          const trackNum = parts[1];
+        // If track data is provided, use it
+        if (trackData) {
+          title = trackData.title || title;
+          artist = trackData.artist || artist;
+          duration = trackData.duration || duration;
+          youtubeId = trackData.youtubeId || trackData.id || trackId;
+          thumbnail = trackData.thumbnail || thumbnail;
+        } else {
+          // If it's a custom ID (like afro_001), extract genre and track number
+          if (trackId.includes('_')) {
+            const parts = trackId.split('_');
+            const genre = parts[0];
+            const trackNum = parts[1];
 
-          // Try to fetch the track from the music API
-          const response = await fetch(`/api/music?genre=${genre}`);
-          if (response.ok) {
-            const data = await response.json();
-            if (data.genre && data.genre.tracks) {
-              // Find the track by its number in the genre
-              const trackIndex = parseInt(trackNum) - 1;
-              if (data.genre.tracks[trackIndex]) {
-                const apiTrack = data.genre.tracks[trackIndex];
-                title = apiTrack.title;
-                artist = apiTrack.artist;
-                youtubeId = apiTrack.youtubeId;
+            // Try to fetch the track from the music API
+            const response = await fetch(`/api/music?genre=${genre}`);
+            if (response.ok) {
+              const data = await response.json();
+              if (data.genre && data.genre.tracks) {
+                // Find the track by its number in the genre
+                const trackIndex = parseInt(trackNum) - 1;
+                if (data.genre.tracks[trackIndex]) {
+                  const apiTrack = data.genre.tracks[trackIndex];
+                  title = apiTrack.title;
+                  artist = apiTrack.artist;
+                  youtubeId = apiTrack.youtubeId;
+                  duration = apiTrack.duration || duration;
+                  thumbnail = apiTrack.thumbnail || thumbnail;
+                }
               }
             }
           }
@@ -91,11 +104,11 @@ export async function POST(
           track = await prisma.track.create({
             data: {
               youtubeId: youtubeId,
-              title: title || "Unknown Track",
-              artist: artist || "Unknown Artist",
-              duration: "0:00", // Duration must be a string
+              title: title,
+              artist: artist,
+              duration: duration,
               youtubeUrl: `https://www.youtube.com/watch?v=${youtubeId}`,
-              thumbnail: `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg` // Use hqdefault instead of mqdefault
+              thumbnail: thumbnail
             }
           });
         } catch (createError) {
@@ -119,11 +132,11 @@ export async function POST(
           track = await prisma.track.create({
             data: {
               youtubeId: trackId,
-              title: "Unknown Track",
-              artist: "Unknown Artist",
-              duration: "0:00", // Duration must be a string
+              title: trackData?.title || "Unknown Track",
+              artist: trackData?.artist || "Unknown Artist",
+              duration: trackData?.duration || "0:00",
               youtubeUrl: `https://www.youtube.com/watch?v=${trackId}`,
-              thumbnail: `https://i.ytimg.com/vi/${trackId}/hqdefault.jpg` // Use hqdefault instead of mqdefault
+              thumbnail: trackData?.thumbnail || `https://i.ytimg.com/vi/${trackId}/hqdefault.jpg`
             }
           });
         } catch (fallbackError) {

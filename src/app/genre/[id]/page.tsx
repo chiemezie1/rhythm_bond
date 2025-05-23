@@ -133,15 +133,16 @@ export default function GenrePage({ params: serverParams }: { params: { id: stri
     if (!isAuthenticated || genre?.isPredefined) return;
 
     try {
-      const success = await addTrackToGenre(genreId, trackId);
+      // Find the track in search results or all tracks
+      const track = searchResults.find((t) => t.id === trackId) ||
+                   allTracks.find((t) => t.id === trackId);
+
+      const success = await addTrackToGenre(genreId, trackId, track);
 
       if (success) {
-        // Find the track in search results
-        const track = searchResults.find((t) => t.id === trackId);
-
         if (track) {
           setTracks([...tracks, track]);
-          // Remove from search results
+          // Remove from search results if it was there
           setSearchResults(searchResults.filter((t) => t.id !== trackId));
         }
       }
@@ -187,6 +188,34 @@ export default function GenrePage({ params: serverParams }: { params: { id: stri
   return (
     <Layout>
       <div className="max-w-6xl mx-auto px-4">
+        {/* Breadcrumb Navigation */}
+        <div className="mb-6 pt-4">
+          <nav className="flex items-center space-x-2 text-sm">
+            <Link
+              href="/"
+              className="text-gray-400 hover:text-white transition-colors flex items-center gap-1"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              Home
+            </Link>
+            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            <Link
+              href="/categories"
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              Categories
+            </Link>
+            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            <span className="text-white">{genre?.name || 'Genre'}</span>
+          </nav>
+        </div>
+
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -194,12 +223,23 @@ export default function GenrePage({ params: serverParams }: { params: { id: stri
         ) : error ? (
           <div className="bg-dark-lighter rounded-xl p-8 text-center mt-8">
             <p className="text-red-400 mb-4">{error}</p>
-            <Link
-              href="/categories"
-              className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md"
-            >
-              Browse Categories
-            </Link>
+            <div className="flex gap-3 justify-center">
+              <Link
+                href="/"
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Home
+              </Link>
+              <Link
+                href="/categories"
+                className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-md"
+              >
+                Browse Categories
+              </Link>
+            </div>
           </div>
         ) : (
           <>
@@ -213,7 +253,18 @@ export default function GenrePage({ params: serverParams }: { params: { id: stri
               style={!genre.isPredefined ? { backgroundColor: genre.color || '#3b82f6' } : {}}
             >
               <div className="flex items-center justify-between mb-4">
-                <h1 className="text-3xl font-bold text-white">{genre.name}</h1>
+                <div className="flex items-center gap-4">
+                  <Link
+                    href="/"
+                    className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-md transition-colors flex items-center gap-2"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back to Home
+                  </Link>
+                  <h1 className="text-3xl font-bold text-white">{genre.name}</h1>
+                </div>
 
                 {isAuthenticated && !genre.isPredefined && (
                   <Link
@@ -289,19 +340,25 @@ export default function GenrePage({ params: serverParams }: { params: { id: stri
                 )}
 
                 {!showAllTracks && searchResults.length > 0 && (
-                  <div className="mt-4">
-                    <h3 className="text-lg font-medium mb-2">Search Results</h3>
-                    <div className="space-y-2">
+                  <div className="mt-6">
+                    <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      Search Results ({searchResults.length})
+                    </h3>
+                    <div className="space-y-3">
                       {getSortedTracks(searchResults).map((track) => (
-                        <div key={track.id} className="flex items-center justify-between bg-dark-lightest p-3 rounded-md">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 relative flex-shrink-0 bg-dark-lightest rounded">
+                        <div key={track.id} className="bg-dark-lightest hover:bg-dark-lighter rounded-xl p-4 transition-all duration-200 group">
+                          <div className="flex items-center gap-4">
+                            {/* Track Thumbnail */}
+                            <div className="w-12 h-12 relative flex-shrink-0 bg-dark-lighter rounded-lg overflow-hidden">
                               {track.thumbnail ? (
                                 <Image
                                   src={track.thumbnail.replace('mqdefault.jpg', 'hqdefault.jpg')}
                                   alt={track.title}
                                   fill
-                                  className="object-cover rounded"
+                                  className="object-cover"
                                   unoptimized
                                   onError={(e) => {
                                     e.currentTarget.style.display = 'none';
@@ -324,17 +381,33 @@ export default function GenrePage({ params: serverParams }: { params: { id: stri
                                 </div>
                               )}
                             </div>
-                            <div>
-                              <p className="font-medium">{track.title}</p>
-                              <p className="text-sm text-gray-400">{track.artist}</p>
+
+                            {/* Track Info */}
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-white truncate group-hover:text-primary transition-colors">
+                                {track.title}
+                              </h4>
+                              <p className="text-sm text-gray-400 truncate">
+                                {track.artist}
+                              </p>
+                              {track.duration && (
+                                <p className="text-xs text-gray-500 font-mono mt-1">
+                                  {track.duration}
+                                </p>
+                              )}
                             </div>
+
+                            {/* Add Button */}
+                            <button
+                              className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 group-hover:scale-105"
+                              onClick={() => handleAddTrack(track.id)}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                              </svg>
+                              Add to Genre
+                            </button>
                           </div>
-                          <button
-                            className="bg-primary hover:bg-primary-dark text-white px-3 py-1 rounded-md text-sm"
-                            onClick={() => handleAddTrack(track.id)}
-                          >
-                            Add
-                          </button>
                         </div>
                       ))}
                     </div>
@@ -342,22 +415,38 @@ export default function GenrePage({ params: serverParams }: { params: { id: stri
                 )}
 
                 {showAllTracks && (
-                  <div className="mt-4">
-                    <h3 className="text-lg font-medium mb-2">All Available Tracks</h3>
-                    <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+                  <div className="mt-6">
+                    <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                      Your Music Library ({getAvailableTracks().length} available)
+                    </h3>
+                    <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
                       {getAvailableTracks().length === 0 ? (
-                        <p className="text-gray-400 text-center py-4">All tracks are already in this genre</p>
+                        <div className="bg-dark-lightest rounded-xl p-8 text-center">
+                          <div className="flex flex-col items-center">
+                            <div className="w-12 h-12 bg-dark-lighter rounded-full flex items-center justify-center mb-3">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                            <p className="text-gray-400 font-medium">All tracks added!</p>
+                            <p className="text-sm text-gray-500 mt-1">All tracks from your library are already in this genre</p>
+                          </div>
+                        </div>
                       ) : (
                         getSortedTracks(getAvailableTracks()).map((track) => (
-                          <div key={track.id} className="flex items-center justify-between bg-dark-lightest p-3 rounded-md">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 relative flex-shrink-0 bg-dark-lightest rounded">
+                          <div key={track.id} className="bg-dark-lightest hover:bg-dark-lighter rounded-xl p-4 transition-all duration-200 group">
+                            <div className="flex items-center gap-4">
+                              {/* Track Thumbnail */}
+                              <div className="w-12 h-12 relative flex-shrink-0 bg-dark-lighter rounded-lg overflow-hidden">
                                 {track.thumbnail ? (
                                   <Image
                                     src={track.thumbnail.replace('mqdefault.jpg', 'hqdefault.jpg')}
                                     alt={track.title}
                                     fill
-                                    className="object-cover rounded"
+                                    className="object-cover"
                                     unoptimized
                                     onError={(e) => {
                                       e.currentTarget.style.display = 'none';
@@ -380,17 +469,33 @@ export default function GenrePage({ params: serverParams }: { params: { id: stri
                                   </div>
                                 )}
                               </div>
-                              <div>
-                                <p className="font-medium">{track.title}</p>
-                                <p className="text-sm text-gray-400">{track.artist}</p>
+
+                              {/* Track Info */}
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-white truncate group-hover:text-primary transition-colors">
+                                  {track.title}
+                                </h4>
+                                <p className="text-sm text-gray-400 truncate">
+                                  {track.artist}
+                                </p>
+                                {track.duration && (
+                                  <p className="text-xs text-gray-500 font-mono mt-1">
+                                    {track.duration}
+                                  </p>
+                                )}
                               </div>
+
+                              {/* Add Button */}
+                              <button
+                                className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 group-hover:scale-105"
+                                onClick={() => handleAddTrack(track.id)}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Add to Genre
+                              </button>
                             </div>
-                            <button
-                              className="bg-primary hover:bg-primary-dark text-white px-3 py-1 rounded-md text-sm"
-                              onClick={() => handleAddTrack(track.id)}
-                            >
-                              Add
-                            </button>
                           </div>
                         ))
                       )}
@@ -424,21 +529,111 @@ export default function GenrePage({ params: serverParams }: { params: { id: stri
 
               {tracks.length === 0 ? (
                 <div className="bg-dark-lighter rounded-xl p-8 text-center">
-                  <p className="text-gray-400 mb-4">No tracks found for this genre.</p>
-                  {isAuthenticated && !genre.isPredefined && (
-                    <p className="text-sm text-gray-500">
-                      Use the search box above to add tracks to this genre.
-                    </p>
-                  )}
+                  <div className="flex flex-col items-center">
+                    <div className="w-16 h-16 bg-dark-lightest rounded-full flex items-center justify-center mb-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-2v13M9 19c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm12-2c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-white mb-2">No tracks yet</h3>
+                    <p className="text-gray-400 mb-4">This genre doesn't have any tracks yet.</p>
+                    {isAuthenticated && !genre.isPredefined && (
+                      <p className="text-sm text-gray-500">
+                        Use the search box above to add your first track to this genre.
+                      </p>
+                    )}
+                  </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                  {getSortedTracks(tracks).map((track) => (
-                    <TrackCard
+                <div className="space-y-3">
+                  {getSortedTracks(tracks).map((track, index) => (
+                    <div
                       key={track.id}
-                      track={track}
-                      onRemove={!genre.isPredefined ? () => handleRemoveTrack(track.id) : undefined}
-                    />
+                      className="bg-dark-lighter hover:bg-dark-lightest rounded-xl p-4 transition-all duration-200 group"
+                    >
+                      <div className="flex items-center gap-4">
+                        {/* Track Number */}
+                        <div className="w-8 h-8 flex items-center justify-center text-gray-400 font-medium text-sm">
+                          {index + 1}
+                        </div>
+
+                        {/* Track Thumbnail */}
+                        <div className="w-12 h-12 relative flex-shrink-0 bg-dark-lightest rounded-lg overflow-hidden">
+                          {track.thumbnail ? (
+                            <Image
+                              src={track.thumbnail.replace('mqdefault.jpg', 'hqdefault.jpg')}
+                              alt={track.title}
+                              fill
+                              className="object-cover"
+                              unoptimized
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                const parent = e.currentTarget.parentElement;
+                                if (parent) {
+                                  const icon = document.createElement('div');
+                                  icon.className = 'flex items-center justify-center w-full h-full';
+                                  icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>';
+                                  parent.appendChild(icon);
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="flex items-center justify-center w-full h-full">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+                                <path d="M9 18V5l12-2v13"></path>
+                                <circle cx="6" cy="18" r="3"></circle>
+                                <circle cx="18" cy="16" r="3"></circle>
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Track Info */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-white truncate group-hover:text-primary transition-colors">
+                            {track.title}
+                          </h3>
+                          <p className="text-sm text-gray-400 truncate">
+                            {track.artist}
+                          </p>
+                        </div>
+
+                        {/* Duration */}
+                        <div className="text-sm text-gray-400 font-mono">
+                          {track.duration || '0:00'}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {/* Play Button */}
+                          <button
+                            className="w-8 h-8 bg-primary hover:bg-primary-dark rounded-full flex items-center justify-center transition-colors"
+                            onClick={() => {
+                              // Add play functionality here if needed
+                              console.log('Play track:', track);
+                            }}
+                            title="Play track"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M8 5v14l11-7z"/>
+                            </svg>
+                          </button>
+
+                          {/* Remove Button (only for user-created genres) */}
+                          {!genre.isPredefined && (
+                            <button
+                              className="w-8 h-8 bg-red-600 hover:bg-red-700 rounded-full flex items-center justify-center transition-colors"
+                              onClick={() => handleRemoveTrack(track.id)}
+                              title="Remove from genre"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
