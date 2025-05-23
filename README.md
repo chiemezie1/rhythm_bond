@@ -65,10 +65,15 @@ We believe music is a social magnet that builds empathy, trust, and a sense of b
    ```
 
 3. **Environment Setup**
+
+   ```env
+   DATABASE_URL=mysql://username:password@localhost:3306/rhythm_bond
+   NEXTAUTH_SECRET=your-secret-key
+   NEXTAUTH_URL=http://localhost:3000
+   `or`
    ```bash
    cp .env.example .env.local
    ```
-   Configure your environment variables (see [ARCHITECTURE.md](ARCHITECTURE.md) for details)
 
 4. **Database Setup**
    ```bash
@@ -86,12 +91,7 @@ We believe music is a social magnet that builds empathy, trust, and a sense of b
 6. **Access the application**
    Open `http://localhost:3000` in your browser
 
-## 📋 Future Features
 
-- **AI Recommendations**: Personalized music suggestions based on listening habits
-- **Mood-Based Discovery**: Find music that matches your current mood
-- **Offline Capabilities**: Cache favorite tracks for offline listening
-- **Advanced Analytics**: Detailed listening statistics and insights
 
 ## Contributing
 We welcome contributions! - See [CONTRIBUTING.md](CONTRIBUTING.md).
